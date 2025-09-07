@@ -41,6 +41,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -57,8 +58,36 @@ flutter:
 
   uses-material-design: true
 
+  fonts:
+    - family: FunnelDisplay
+      fonts:
+        - asset: assets/fonts/FunnelDisplay-Regular.ttf
+        - asset: assets/fonts/FunnelDisplay-Bold.ttf
+          weight: 700
+
   assets:
     - assets/
     - assets/animations/
-    
+    - assets/fonts/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  background_color: "#1FBA55"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#1FBA55"
+  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_monochrome: "assets/icon/icon_mono.png"
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#1FBA55"
+  windows:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/icon/icon.png"
     
