@@ -93,7 +93,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'FarmGPT',
+                                        'farmlytics',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.w300,
@@ -282,7 +282,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Start using FarmGPT to see your activity here',
+                              'Start using farmlytics to see your activity here',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.4),

@@ -230,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen>
                       
                       // App name with modern typography
                       Text(
-                        'FarmGPT',
+                        'farmlytics',
                         style: TextStyle(
                           fontSize: 42,
                           fontWeight: FontWeight.w300,

@@ -1,4 +1,4 @@
-# Design Documentation - FarmGPT
+# Design Documentation - Farmlytics
 
 ## Typography
 
