@@ -328,13 +328,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             // TODO: Implement action
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(10),
@@ -342,25 +342,29 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   child: Icon(
                     icon,
                     color: Colors.white,
-                    size: 24,
+                    size: 22,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.white.withOpacity(0.6),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

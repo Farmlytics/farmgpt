@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Set status bar for dark theme
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen>
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
-    
+
     // Initialize animations with smoother timing
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -58,37 +58,24 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
+    );
 
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeInOutCubic,
-    ));
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.easeInOutCubic,
+      ),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 2.0 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.linear,
-    ));
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 2.0 * math.pi).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.linear),
+    );
 
     // Start animations with staggered timing
     _fadeController.forward();
@@ -99,28 +86,39 @@ class _SplashScreenState extends State<SplashScreen>
       _progressController.forward();
       _rotationController.repeat();
     });
-    
+
     // Navigate to main page after 4 seconds
     Future.delayed(const Duration(milliseconds: 5000), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const MainPage(),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const MainPage(),
             transitionDuration: const Duration(milliseconds: 600),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)
-                ),
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.1),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                    child: SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(0.0, 0.1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+                  );
+                },
           ),
         );
       }
@@ -140,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -176,7 +174,7 @@ class _SplashScreenState extends State<SplashScreen>
                             width: 1.5,
                             height: 1.5,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
+                              color: Colors.white.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -185,15 +183,15 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   );
                 }),
-                
+
                 // Main content
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Move content up by reducing this spacer
-                      const SizedBox(height: 40),
-                      
+                      const SizedBox(height: 18),
+
                       // Modern logo with glassmorphism effect
                       ScaleTransition(
                         scale: _scaleAnimation,
@@ -201,33 +199,39 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            color: const Color(0xFF1FBA55),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF1FBA55).withOpacity(0.3),
-                                blurRadius: 30,
-                                offset: const Offset(0, 10),
-                                spreadRadius: 0,
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.8),
-                                blurRadius: 20,
-                                offset: const Offset(0, 5),
-                                spreadRadius: -5,
-                              ),
-                            ],
+                            // borderRadius: BorderRadius.circular(18),
+                            // color: const Color(0xFF1FBA55),
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: const Color(
+                            //       0xFF1FBA55,
+                            //     ).withValues(alpha: 0.3),
+                            //     blurRadius: 30,
+                            //     offset: const Offset(0, 10),
+                            //     spreadRadius: 0,
+                            //   ),
+                            //   BoxShadow(
+                            //     color: Colors.black.withValues(alpha: 0.8),
+                            //     blurRadius: 20,
+                            //     offset: const Offset(0, 5),
+                            //     spreadRadius: -5,
+                            //   ),
+                            // ],
                           ),
-                          child: const Icon(
-                            Icons.eco_outlined,
-                            color: Colors.white,
-                            size: 56,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: Image.asset(
+                              'assets/icon/icon_splash.png',
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // App name with modern typography
                       Text(
                         'farmlytics',
@@ -242,33 +246,30 @@ class _SplashScreenState extends State<SplashScreen>
                             Shadow(
                               offset: const Offset(0, 2),
                               blurRadius: 8,
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                             ),
                           ],
                         ),
                       ),
-                      
-                      
+
                       const SizedBox(height: 50),
-                      
+
                       // Plant animation without border - bigger size
                       SizedBox(
-                        width: 220,
-                        height: 220,
+                        width: 280,
+                        height: 280,
                         child: Lottie.asset(
                           'assets/animations/plant.json',
                           fit: BoxFit.contain,
                           repeat: true,
                           animate: true,
                           frameRate: FrameRate.max,
-                          options: LottieOptions(
-                            enableMergePaths: true,
-                          ),
+                          options: LottieOptions(enableMergePaths: true),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 60),
-                      
+
                       // Modern progress indicator
                       SizedBox(
                         width: 200,
@@ -278,7 +279,7 @@ class _SplashScreenState extends State<SplashScreen>
                               width: 200,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                               child: AnimatedBuilder(
@@ -296,10 +297,14 @@ class _SplashScreenState extends State<SplashScreen>
                                               Color(0xFF1ED760),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(2),
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF1DB954).withOpacity(0.5),
+                                              color: const Color(
+                                                0xFF1DB954,
+                                              ).withValues(alpha: 0.5),
                                               blurRadius: 8,
                                               spreadRadius: 0,
                                             ),
@@ -311,9 +316,9 @@ class _SplashScreenState extends State<SplashScreen>
                                 },
                               ),
                             ),
-                            
+
                             const SizedBox(height: 20),
-                            
+
                             // Progress percentage
                             AnimatedBuilder(
                               animation: _progressAnimation,
@@ -322,7 +327,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   '${(_progressAnimation.value * 100).toInt()}%',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white.withOpacity(0.6),
+                                    color: Colors.white.withValues(alpha: 0.6),
                                     fontWeight: FontWeight.w400,
                                     letterSpacing: 1.0,
                                   ),
