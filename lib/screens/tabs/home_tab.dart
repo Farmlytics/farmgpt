@@ -1973,7 +1973,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               Row(
                 children: [
                   Text(
-                    'Designed and Developed by ',
+                    'Cultivated with ❤️ by ',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withOpacity(0.5),
