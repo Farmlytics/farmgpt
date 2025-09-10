@@ -579,12 +579,12 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           children: [
                             _isLoadingName
                                 ? Text(
-                              'farmlytics',
-                              style: TextStyle(
+                                    'farmlytics',
+                                    style: TextStyle(
                                       fontSize: 28,
-                                fontWeight: FontWeight.w300,
-                                fontFamily: 'FunnelDisplay',
-                                color: Colors.white,
+                                      fontWeight: FontWeight.w300,
+                                      fontFamily: 'FunnelDisplay',
+                                      color: Colors.white,
                                       letterSpacing: -0.8,
                                     ),
                                   )
@@ -596,8 +596,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                       fontFamily: 'FunnelDisplay',
                                       color: Colors.white,
                                       letterSpacing: -0.8,
-                              ),
-                            ),
+                                    ),
+                                  ),
                             Text(
                               'welcome to farmlytics',
                               style: TextStyle(
@@ -619,20 +619,20 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           );
                         },
                         child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
                             color: const Color(0xFF1FBA55).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
                               color: const Color(0xFF1FBA55).withOpacity(0.3),
-                            width: 0.5,
+                              width: 0.5,
+                            ),
                           ),
-                        ),
-                        child: Icon(
+                          child: Icon(
                             Icons.person_outline,
                             color: const Color(0xFF1FBA55),
-                          size: 20,
+                            size: 20,
                           ),
                         ),
                       ),
@@ -748,9 +748,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
       ),
       child: Column(
@@ -812,36 +812,36 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('👋', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontFamily: 'FunnelDisplay',
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text('👋', style: TextStyle(fontSize: 24)),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Welcome Back',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                            fontFamily: 'FunnelDisplay',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
               'Ready to optimize your farming with insights and recommendations.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.7),
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.7),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -988,16 +988,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-              Text(
+        Text(
           'My Crops',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  fontFamily: 'FunnelDisplay',
-                ),
-              ),
-              const SizedBox(height: 16),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            fontFamily: 'FunnelDisplay',
+          ),
+        ),
+        const SizedBox(height: 16),
         _isLoadingUserCrops
             ? Container(
                 height: 80,
@@ -1032,7 +1032,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     return Container(
       margin: const EdgeInsets.only(right: 12),
       child: Column(
-                children: [
+        children: [
           Container(
             width: 60,
             height: 60,
@@ -1075,9 +1075,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1099,12 +1099,12 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
           const SizedBox(height: 4),
-              Text(
+          Text(
             'Add',
-                style: TextStyle(
+            style: TextStyle(
               fontSize: 10,
               color: Colors.white.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1154,8 +1154,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  fontFamily: 'FunnelDisplay',
+                              color: Colors.white,
+                              fontFamily: 'FunnelDisplay',
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1242,7 +1242,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               const SizedBox(height: 16),
 
               // Crops list
-                  Expanded(
+              Expanded(
                 child: FutureBuilder<List<Crop>>(
                   future: AuthService().getCrops(),
                   builder: (context, snapshot) {
@@ -1277,10 +1277,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                                 fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+                              ),
+                            ),
+                          ],
+                        ),
                       );
                     }
 
@@ -1377,7 +1377,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                 ),
                                 if (crop.description != null) ...[
                                   const SizedBox(height: 4),
-              Text(
+                                  Text(
                                     crop.description!,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.6),
@@ -1460,14 +1460,14 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       children: [
         Text(
           'Common Diseases for Your Crops',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  fontFamily: 'FunnelDisplay',
-                ),
-              ),
-              const SizedBox(height: 16),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            fontFamily: 'FunnelDisplay',
+          ),
+        ),
+        const SizedBox(height: 16),
         _isLoadingDiseases
             ? Container(
                 height: 200,
@@ -1492,28 +1492,28 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                 ),
                 child: Center(
-                child: Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
+                    children: [
+                      Icon(
                         Icons.bug_report_outlined,
-                      color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withOpacity(0.4),
                         size: 32,
-                    ),
+                      ),
                       const SizedBox(height: 8),
-                    Text(
+                      Text(
                         _userCrops.isEmpty
                             ? 'Add crops to see relevant diseases'
                             : 'No diseases found for your crops',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
                           fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               )
             : SizedBox(
                 height: 180,
@@ -1524,8 +1524,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                     final disease = _diseases[index];
                     return _buildDiseaseCard(disease);
                   },
-          ),
-        ),
+                ),
+              ),
       ],
     );
   }
@@ -1539,13 +1539,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
       ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           // Disease Image
-                Container(
+          Container(
             height: 80,
-                  decoration: BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -1602,15 +1602,15 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       Expanded(
                         child: Text(
                           disease.name,
-                  style: const TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                             fontFamily: 'FunnelDisplay',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -1634,7 +1634,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               size: 12,
                             ),
                             const SizedBox(width: 4),
-                Text(
+                            Text(
                               disease.severityLabel,
                               style: TextStyle(
                                 color: disease.severityColor,
@@ -1653,14 +1653,14 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   // Description
                   Text(
                     disease.shortDescription,
-                  style: TextStyle(
-                    fontSize: 11,
+                    style: TextStyle(
+                      fontSize: 11,
                       color: Colors.white.withOpacity(0.8),
                       height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
 
                   const Spacer(),
 
@@ -1675,10 +1675,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         ],
       ),
     );
@@ -1712,7 +1712,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             : _governmentPrograms.isEmpty
             ? Container(
                 height: 120,
-      padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -1862,9 +1862,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               size: 12,
                             ),
                             const SizedBox(width: 4),
-          Text(
+                            Text(
                               program.categoryLabel,
-            style: TextStyle(
+                              style: TextStyle(
                                 color: program.categoryColor,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -1879,9 +1879,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   const SizedBox(height: 6),
 
                   // Description
-          Text(
+                  Text(
                     program.shortDescription,
-            style: TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       color: Colors.white.withOpacity(0.8),
                       height: 1.2,
@@ -1972,13 +1972,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             children: [
               Row(
                 children: [
-          Text(
+                  Text(
                     'Designed and Developed by ',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.5),
-              fontWeight: FontWeight.w400,
-            ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.5),
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   GestureDetector(
                     onTap: () async {
