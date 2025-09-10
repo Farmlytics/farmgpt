@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import 'MainPage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,11 +14,9 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _progressController;
-  late AnimationController _scaleController;
   late AnimationController _rotationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _progressAnimation;
-  late Animation<double> _scaleAnimation;
   late Animation<double> _rotationAnimation;
 
   @override
@@ -48,11 +45,6 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
     _rotationController = AnimationController(
       duration: const Duration(milliseconds: 8000),
       vsync: this,
@@ -69,67 +61,25 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
-
     _rotationAnimation = Tween<double>(begin: 0.0, end: 2.0 * math.pi).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.linear),
     );
 
     // Start animations with staggered timing
     _fadeController.forward();
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _scaleController.forward();
-    });
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       _progressController.forward();
       _rotationController.repeat();
     });
 
-    // Navigate to main page after 4 seconds
-    Future.delayed(const Duration(milliseconds: 5000), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const MainPage(),
-            transitionDuration: const Duration(milliseconds: 600),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    child: SlideTransition(
-                      position:
-                          Tween<Offset>(
-                            begin: const Offset(0.0, 0.1),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          ),
-                      child: child,
-                    ),
-                  );
-                },
-          ),
-        );
-      }
-    });
+    // AuthWrapper now controls navigation; Splash should not navigate on its own
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     _progressController.dispose();
-    _scaleController.dispose();
     _rotationController.dispose();
     super.dispose();
   }
@@ -193,38 +143,24 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 18),
 
                       // Modern logo with glassmorphism effect
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            // borderRadius: BorderRadius.circular(18),
-                            // color: const Color(0xFF1FBA55),
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     color: const Color(
-                            //       0xFF1FBA55,
-                            //     ).withValues(alpha: 0.3),
-                            //     blurRadius: 30,
-                            //     offset: const Offset(0, 10),
-                            //     spreadRadius: 0,
-                            //   ),
-                            //   BoxShadow(
-                            //     color: Colors.black.withValues(alpha: 0.8),
-                            //     blurRadius: 20,
-                            //     offset: const Offset(0, 5),
-                            //     spreadRadius: -5,
-                            //   ),
-                            // ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Image.asset(
-                              'assets/icon/icon_splash.png',
-                              width: 56,
-                              height: 56,
-                              fit: BoxFit.contain,
+                      Hero(
+                        tag: 'app_logo',
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Image.asset(
+                                'assets/icon/icon_splash.png',
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
