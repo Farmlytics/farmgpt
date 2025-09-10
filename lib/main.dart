@@ -1,8 +1,17 @@
-import 'package:farmlytics/splash.dart';
+import 'package:farmlytics/auth_wrapper.dart';
+import 'package:farmlytics/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
+  // Initialize Supabase
+  await AuthService.initialize();
+
   runApp(const MyApp());
 }
 
@@ -18,7 +27,7 @@ class MyApp extends StatelessWidget {
     //     statusBarBrightness: Brightness.light,
     //   ),
     // );
-    
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AI Farmer',
@@ -26,10 +35,22 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         fontFamily: 'FunnelDisplay',
         textTheme: const TextTheme(
-          headlineLarge: TextStyle(fontFamily: 'FunnelDisplay', fontWeight: FontWeight.bold),
-          headlineMedium: TextStyle(fontFamily: 'FunnelDisplay', fontWeight: FontWeight.bold),
-          headlineSmall: TextStyle(fontFamily: 'FunnelDisplay', fontWeight: FontWeight.bold),
-          titleLarge: TextStyle(fontFamily: 'FunnelDisplay', fontWeight: FontWeight.bold),
+          headlineLarge: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontWeight: FontWeight.bold,
+          ),
+          headlineMedium: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontWeight: FontWeight.bold,
+          ),
+          headlineSmall: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontWeight: FontWeight.bold,
+          ),
+          titleLarge: TextStyle(
+            fontFamily: 'FunnelDisplay',
+            fontWeight: FontWeight.bold,
+          ),
           titleMedium: TextStyle(fontFamily: 'FunnelDisplay'),
           titleSmall: TextStyle(fontFamily: 'FunnelDisplay'),
           bodyLarge: TextStyle(fontFamily: 'FunnelDisplay'),
@@ -40,7 +61,7 @@ class MyApp extends StatelessWidget {
           labelSmall: TextStyle(fontFamily: 'Helvetica'),
         ),
       ),
-      home: const SplashScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
