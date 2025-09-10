@@ -93,178 +93,204 @@ class _AiChatTabState extends State<AiChatTab>
     super.build(context);
     return Column(
       children: [
-        // App Bar
+        // Custom App Bar
         Container(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(30, 8, 30, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AI Assistant',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'FunnelDisplay',
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                      ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ai assistant',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'FunnelDisplay',
+                            color: Colors.white,
+                            letterSpacing: -0.8,
+                          ),
+                        ),
+                        Text(
+                          'get farming insights and advice',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.6),
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Get farming insights and advice',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.6),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                    width: 0.5,
                   ),
-                ),
-                child: Icon(
-                  Icons.history_outlined,
-                  color: Colors.white.withOpacity(0.8),
-                  size: 20,
-                ),
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: Add chat history
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1FBA55).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF1FBA55).withOpacity(0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.history_outlined,
+                        color: const Color(0xFF1FBA55),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
 
-        // Quick Questions
-        if (_messages.length <= 1) ...[
-          Padding(
+        // Scrollable Content
+        Expanded(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Quick Questions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    fontFamily: 'FunnelDisplay',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _quickQuestions.map((question) {
-                    return GestureDetector(
-                      onTap: () {
-                        _messageController.text = question;
-                        _sendMessage();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.15),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Text(
-                          question,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
+                const SizedBox(height: 24),
+
+                // Quick Questions
+                if (_messages.length <= 1) ...[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quick Questions',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          fontFamily: 'FunnelDisplay',
                         ),
                       ),
-                    );
-                  }).toList(),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _quickQuestions.map((question) {
+                          return GestureDetector(
+                            onTap: () {
+                              _messageController.text = question;
+                              _sendMessage();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.1),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                question,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                ],
+
+                // Messages
+                Column(
+                  children: _messages
+                      .map((message) => _buildMessage(message))
+                      .toList(),
                 ),
+
+                const SizedBox(height: 100), // Bottom padding for input area
               ],
             ),
           ),
-          const SizedBox(height: 24),
-        ],
-
-        // Messages
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final message = _messages[index];
-              return _buildMessage(message);
-            },
-          ),
         ),
 
-        // Input Area
+        // Fixed bottom input area
         Container(
           padding: const EdgeInsets.all(24),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Ask me anything about farming...',
-                      hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.8),
+            border: Border(
+              top: BorderSide(color: Colors.white.withOpacity(0.1), width: 0.5),
+            ),
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 0.5,
                       ),
                     ),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    maxLines: null,
-                    onSubmitted: (_) => _sendMessage(),
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Ask me anything about farming...',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      maxLines: null,
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: _sendMessage,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1FBA55),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.send_rounded,
-                    color: Colors.white,
-                    size: 20,
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _sendMessage,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1FBA55),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

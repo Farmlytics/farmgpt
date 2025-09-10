@@ -5,6 +5,8 @@ import 'package:farmlytics/models/info_card.dart';
 import 'package:farmlytics/models/crop.dart';
 import 'package:farmlytics/models/user_crop.dart';
 import 'package:farmlytics/models/weather.dart';
+import 'package:farmlytics/models/disease.dart';
+import 'package:farmlytics/models/government_program.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -538,31 +540,51 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Weather API Integration
+  // Weather API Integration using WeatherAPI.com
   Future<Weather> getWeatherData({
     required double latitude,
     required double longitude,
   }) async {
     try {
-      // Using OpenWeatherMap API (free tier)
+      // Using WeatherAPI.com (free tier)
       const apiKey =
-          '5b9c5d5b5b5b5b5b5b5b5b5b5b5b5b5b'; // Replace with actual API key
+          '59b1947117dd4e3e8c3225457251009'; // Replace with your actual API key
       final url =
-          'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric';
+          'http://api.weatherapi.com/v1/current.json?key=$apiKey&q=$latitude,$longitude&aqi=no';
 
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
+        // Extract location with proper formatting
+        String locationName = data['location']['name'] ?? 'Unknown Location';
+        String region = data['location']['region'] ?? '';
+        String country = data['location']['country'] ?? '';
+        String fullLocation = region.isNotEmpty && country.isNotEmpty
+            ? '$locationName, $region, $country'
+            : country.isNotEmpty
+            ? '$locationName, $country'
+            : locationName;
+
+        // Get current weather data
+        final current = data['current'];
+        final condition = current['condition'];
+
+        // Map WeatherAPI condition codes to OpenWeatherMap icons
+        String openWeatherIcon = _mapWeatherAPIToOpenWeatherIcon(
+          condition['code'] ?? 1000,
+        );
+
         return Weather(
-          location: data['name'] ?? 'Unknown Location',
-          temperature: (data['main']['temp'] ?? 0).toDouble(),
-          description: data['weather'][0]['description'] ?? 'No description',
-          iconUrl:
-              'https://openweathermap.org/img/wn/${data['weather'][0]['icon']}@2x.png',
-          humidity: data['main']['humidity'] ?? 0,
-          windSpeed: (data['wind']['speed'] ?? 0).toDouble(),
+          location: fullLocation,
+          temperature: (current['temp_c'] ?? 0).toDouble(),
+          description: condition['text'] ?? 'No description',
+          iconUrl: 'https://openweathermap.org/img/wn/$openWeatherIcon@2x.png',
+          humidity: current['humidity'] ?? 0,
+          windSpeed:
+              (current['wind_kph'] ?? 0).toDouble() /
+              3.6, // Convert km/h to m/s
           timestamp: DateTime.now(),
         );
       } else {
@@ -576,16 +598,602 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // Map WeatherAPI condition codes to OpenWeatherMap icon codes
+  String _mapWeatherAPIToOpenWeatherIcon(int weatherAPICode) {
+    // WeatherAPI condition codes to OpenWeatherMap icon mapping
+    switch (weatherAPICode) {
+      // Clear sky
+      case 1000:
+        return '01d'; // clear sky day
+
+      // Partly cloudy
+      case 1003:
+        return '02d'; // few clouds day
+
+      // Cloudy
+      case 1006:
+        return '04d'; // broken clouds
+      case 1009:
+        return '04d'; // overcast
+
+      // Mist/Fog
+      case 1030:
+      case 1135:
+      case 1147:
+        return '50d'; // mist
+
+      // Patchy rain
+      case 1063:
+      case 1180:
+      case 1183:
+      case 1186:
+      case 1189:
+      case 1192:
+      case 1195:
+      case 1201:
+      case 1240:
+      case 1243:
+      case 1246:
+        return '10d'; // rain
+
+      // Patchy snow
+      case 1066:
+      case 1210:
+      case 1213:
+      case 1216:
+      case 1219:
+      case 1222:
+      case 1225:
+      case 1255:
+      case 1258:
+        return '13d'; // snow
+
+      // Patchy sleet
+      case 1069:
+      case 1204:
+      case 1207:
+      case 1249:
+      case 1252:
+        return '13d'; // snow (closest match)
+
+      // Patchy freezing drizzle
+      case 1072:
+      case 1150:
+      case 1153:
+      case 1168:
+      case 1171:
+        return '13d'; // snow (closest match)
+
+      // Thundery outbreaks
+      case 1087:
+      case 1273:
+      case 1276:
+      case 1279:
+      case 1282:
+        return '11d'; // thunderstorm
+
+      // Blowing snow
+      case 1114:
+      case 1117:
+        return '13d'; // snow
+
+      // Blizzard
+      case 1219:
+      case 1222:
+      case 1225:
+        return '13d'; // snow
+
+      // Fog
+      case 1135:
+      case 1147:
+        return '50d'; // mist
+
+      // Freezing fog
+      case 1147:
+        return '50d'; // mist
+
+      // Patchy light drizzle
+      case 1150:
+      case 1153:
+        return '09d'; // shower rain
+
+      // Freezing drizzle
+      case 1168:
+      case 1171:
+        return '13d'; // snow
+
+      // Heavy freezing drizzle
+      case 1171:
+        return '13d'; // snow
+
+      // Patchy light rain
+      case 1180:
+      case 1183:
+        return '10d'; // rain
+
+      // Light rain
+      case 1186:
+      case 1189:
+        return '10d'; // rain
+
+      // Moderate rain
+      case 1192:
+      case 1195:
+        return '10d'; // rain
+
+      // Heavy rain
+      case 1198:
+      case 1201:
+        return '09d'; // shower rain
+
+      // Light freezing rain
+      case 1198:
+        return '13d'; // snow
+
+      // Moderate or heavy freezing rain
+      case 1201:
+        return '13d'; // snow
+
+      // Light sleet
+      case 1204:
+      case 1207:
+        return '13d'; // snow
+
+      // Moderate or heavy sleet
+      case 1207:
+        return '13d'; // snow
+
+      // Patchy light snow
+      case 1210:
+      case 1213:
+        return '13d'; // snow
+
+      // Light snow
+      case 1216:
+      case 1219:
+        return '13d'; // snow
+
+      // Patchy moderate snow
+      case 1213:
+        return '13d'; // snow
+
+      // Moderate snow
+      case 1219:
+        return '13d'; // snow
+
+      // Patchy heavy snow
+      case 1216:
+        return '13d'; // snow
+
+      // Heavy snow
+      case 1222:
+      case 1225:
+        return '13d'; // snow
+
+      // Ice pellets
+      case 1237:
+        return '13d'; // snow
+
+      // Light rain shower
+      case 1240:
+      case 1243:
+        return '09d'; // shower rain
+
+      // Moderate or heavy rain shower
+      case 1246:
+        return '09d'; // shower rain
+
+      // Torrential rain shower
+      case 1249:
+        return '09d'; // shower rain
+
+      // Light sleet showers
+      case 1252:
+        return '13d'; // snow
+
+      // Moderate or heavy sleet showers
+      case 1255:
+        return '13d'; // snow
+
+      // Light snow showers
+      case 1258:
+        return '13d'; // snow
+
+      // Moderate or heavy snow showers
+      case 1261:
+        return '13d'; // snow
+
+      // Light showers of ice pellets
+      case 1264:
+        return '13d'; // snow
+
+      // Moderate or heavy showers of ice pellets
+      case 1267:
+        return '13d'; // snow
+
+      // Patchy light rain with thunder
+      case 1273:
+        return '11d'; // thunderstorm
+
+      // Moderate or heavy rain with thunder
+      case 1276:
+        return '11d'; // thunderstorm
+
+      // Patchy light snow with thunder
+      case 1279:
+        return '11d'; // thunderstorm
+
+      // Moderate or heavy snow with thunder
+      case 1282:
+        return '11d'; // thunderstorm
+
+      default:
+        return '01d'; // default to clear sky
+    }
+  }
+
   Weather _getMockWeatherData() {
-    // Mock weather data for demo
+    // Mock weather data for demo with realistic Indian location
     return Weather(
-      location: 'Farm Location',
-      temperature: 24.0,
+      location: 'Mumbai, Maharashtra, India',
+      temperature: 28.0,
       description: 'partly cloudy',
       iconUrl: 'https://openweathermap.org/img/wn/02d@2x.png',
-      humidity: 65,
-      windSpeed: 3.5,
+      humidity: 75,
+      windSpeed: 2.8,
       timestamp: DateTime.now(),
     );
+  }
+
+  // Disease Management Methods
+  Future<List<Disease>> getCommonDiseases() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('diseases')
+          .select()
+          .eq('is_common', true)
+          .order('name', ascending: true);
+
+      return (response as List).map((json) => Disease.fromJson(json)).toList();
+    } catch (e) {
+      print('Error fetching common diseases: $e');
+      // Return mock data for demo
+      return _getMockDiseasesData();
+    }
+  }
+
+  Future<List<Disease>> getDiseasesBySeverity(String severity) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('diseases')
+          .select()
+          .eq('severity', severity)
+          .eq('is_common', true)
+          .order('name', ascending: true);
+
+      return (response as List).map((json) => Disease.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch diseases by severity: ${e.toString()}');
+    }
+  }
+
+  Future<Disease?> getDiseaseById(String diseaseId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('diseases')
+          .select()
+          .eq('id', diseaseId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Disease.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to fetch disease: ${e.toString()}');
+    }
+  }
+
+  Future<List<Disease>> searchDiseases(String query) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('diseases')
+          .select()
+          .or(
+            'name.ilike.%$query%,description.ilike.%$query%,symptoms.ilike.%$query%',
+          )
+          .eq('is_common', true)
+          .order('name', ascending: true);
+
+      return (response as List).map((json) => Disease.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to search diseases: ${e.toString()}');
+    }
+  }
+
+  List<Disease> _getMockDiseasesData() {
+    // Mock disease data for demo
+    return [
+      Disease(
+        id: '1',
+        name: 'Leaf Spot',
+        description:
+            'A common fungal disease affecting many crops, causing dark spots on leaves.',
+        symptoms:
+            'Dark brown or black spots on leaves, yellowing around spots, premature leaf drop.',
+        treatment:
+            'Apply fungicide spray, remove infected leaves, improve air circulation.',
+        prevention:
+            'Avoid overhead watering, ensure proper spacing, use disease-resistant varieties.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop',
+        severity: 'moderate',
+        affectedCrops: ['Tomato', 'Pepper', 'Bean'],
+        isCommon: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      Disease(
+        id: '2',
+        name: 'Powdery Mildew',
+        description:
+            'White powdery coating on leaves and stems, common in humid conditions.',
+        symptoms:
+            'White powdery substance on leaves, stunted growth, leaf distortion.',
+        treatment: 'Spray with baking soda solution or sulfur-based fungicide.',
+        prevention: 'Ensure good air circulation, avoid overcrowding plants.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1585503418537-88331351ad99?w=400&h=300&fit=crop',
+        severity: 'mild',
+        affectedCrops: ['Cucumber', 'Squash', 'Rose'],
+        isCommon: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      Disease(
+        id: '3',
+        name: 'Root Rot',
+        description:
+            'Serious disease affecting plant roots, often fatal if not treated quickly.',
+        symptoms:
+            'Wilting plants, yellowing leaves, black or brown mushy roots.',
+        treatment:
+            'Remove affected plants, improve drainage, apply fungicide to soil.',
+        prevention:
+            'Ensure proper drainage, avoid overwatering, use well-draining soil.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1574263867128-5c18bcadf30b?w=400&h=300&fit=crop',
+        severity: 'severe',
+        affectedCrops: ['All crops'],
+        isCommon: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      Disease(
+        id: '4',
+        name: 'Aphid Infestation',
+        description:
+            'Small insects that feed on plant sap, weakening the plant.',
+        symptoms:
+            'Small green or black insects on leaves, sticky honeydew, curled leaves.',
+        treatment: 'Spray with insecticidal soap, release beneficial insects.',
+        prevention:
+            'Regular inspection, companion planting, maintain plant health.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1629901925121-8a141c2a42f4?w=400&h=300&fit=crop',
+        severity: 'moderate',
+        affectedCrops: ['Most vegetables'],
+        isCommon: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
+  }
+
+  // Government Program Management Methods
+  Future<List<GovernmentProgram>> getActiveGovernmentPrograms() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('government_programs')
+          .select()
+          .eq('is_active', true)
+          .eq('status', 'active')
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => GovernmentProgram.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('Error fetching government programs: $e');
+      // Return mock data for demo
+      return _getMockGovernmentProgramsData();
+    }
+  }
+
+  Future<List<GovernmentProgram>> getGovernmentProgramsByCategory(
+    String category,
+  ) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('government_programs')
+          .select()
+          .eq('category', category)
+          .eq('is_active', true)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => GovernmentProgram.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception(
+        'Failed to fetch government programs by category: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<GovernmentProgram?> getGovernmentProgramById(String programId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('government_programs')
+          .select()
+          .eq('id', programId)
+          .maybeSingle();
+
+      if (response != null) {
+        return GovernmentProgram.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to fetch government program: ${e.toString()}');
+    }
+  }
+
+  Future<List<GovernmentProgram>> searchGovernmentPrograms(String query) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('government_programs')
+          .select()
+          .or(
+            'name.ilike.%$query%,description.ilike.%$query%,benefits.ilike.%$query%',
+          )
+          .eq('is_active', true)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => GovernmentProgram.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to search government programs: ${e.toString()}');
+    }
+  }
+
+  List<GovernmentProgram> _getMockGovernmentProgramsData() {
+    // Mock government program data for demo
+    return [
+      GovernmentProgram(
+        id: '1',
+        name: 'PM-KISAN Scheme',
+        description:
+            'Direct income support scheme for farmers providing ₹6,000 per year in three equal installments.',
+        eligibility:
+            'Small and marginal farmers with landholding up to 2 hectares. Must be a citizen of India.',
+        benefits:
+            '₹6,000 per year in three installments of ₹2,000 each. Direct transfer to bank account.',
+        applicationProcess:
+            'Apply online through PM-KISAN portal or visit nearest Common Service Centre (CSC).',
+        imageUrl:
+            'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop',
+        category: 'subsidy',
+        status: 'active',
+        maxAmount: 6000,
+        deadline: '2024-12-31',
+        targetCrops: ['All crops'],
+        department: 'Ministry of Agriculture & Farmers Welfare',
+        contactInfo: '1800-180-1551',
+        website: 'https://pmkisan.gov.in',
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      GovernmentProgram(
+        id: '2',
+        name: 'Kisan Credit Card (KCC)',
+        description:
+            'Flexible credit facility for farmers to meet their agricultural and allied activities needs.',
+        eligibility:
+            'Farmers, tenant farmers, oral lessees, sharecroppers, and self-help groups.',
+        benefits:
+            'Credit up to ₹3 lakh at 4% interest rate. No collateral required for loans up to ₹1.6 lakh.',
+        applicationProcess:
+            'Apply at any commercial bank, cooperative bank, or regional rural bank.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop',
+        category: 'loan',
+        status: 'active',
+        maxAmount: 300000,
+        deadline: null,
+        targetCrops: ['All crops'],
+        department: 'Reserve Bank of India',
+        contactInfo: 'Contact your nearest bank branch',
+        website: 'https://rbi.org.in',
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      GovernmentProgram(
+        id: '3',
+        name: 'Soil Health Card Scheme',
+        description:
+            'Provides soil health cards to farmers with recommendations for appropriate fertilizer use.',
+        eligibility:
+            'All farmers across India can apply for soil health cards.',
+        benefits:
+            'Free soil testing, personalized fertilizer recommendations, improved crop yield.',
+        applicationProcess:
+            'Apply online through Soil Health Card portal or visit nearest soil testing lab.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1574263867128-5c18bcadf30b?w=400&h=300&fit=crop',
+        category: 'training',
+        status: 'active',
+        maxAmount: null,
+        deadline: null,
+        targetCrops: ['All crops'],
+        department: 'Ministry of Agriculture & Farmers Welfare',
+        contactInfo: '1800-180-1551',
+        website: 'https://soilhealth.dac.gov.in',
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      GovernmentProgram(
+        id: '4',
+        name: 'Pradhan Mantri Fasal Bima Yojana (PMFBY)',
+        description:
+            'Crop insurance scheme to provide financial support to farmers in case of crop failure.',
+        eligibility: 'All farmers growing notified crops in notified areas.',
+        benefits:
+            'Premium as low as 1.5% for Kharif crops, 2% for Rabi crops, and 5% for commercial crops.',
+        applicationProcess:
+            'Apply through insurance companies or Common Service Centres.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1585503418537-88331351ad99?w=400&h=300&fit=crop',
+        category: 'insurance',
+        status: 'active',
+        maxAmount: null,
+        deadline: '2024-03-31',
+        targetCrops: ['Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane'],
+        department: 'Ministry of Agriculture & Farmers Welfare',
+        contactInfo: '1800-180-1551',
+        website: 'https://pmfby.gov.in',
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      GovernmentProgram(
+        id: '5',
+        name: 'Sub-Mission on Agricultural Mechanization (SMAM)',
+        description:
+            'Promotes agricultural mechanization by providing financial assistance for farm equipment.',
+        eligibility:
+            'Individual farmers, farmer groups, cooperatives, and custom hiring centers.',
+        benefits:
+            'Subsidy up to 40% for general farmers and 50% for SC/ST farmers on farm equipment.',
+        applicationProcess:
+            'Apply through state agriculture department or online portal.',
+        imageUrl:
+            'https://images.unsplash.com/photo-1629901925121-8a141c2a42f4?w=400&h=300&fit=crop',
+        category: 'equipment',
+        status: 'active',
+        maxAmount: 500000,
+        deadline: '2024-12-31',
+        targetCrops: ['All crops'],
+        department: 'Ministry of Agriculture & Farmers Welfare',
+        contactInfo: '1800-180-1551',
+        website: 'https://agricoop.gov.in',
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
   }
 }

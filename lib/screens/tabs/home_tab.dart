@@ -5,7 +5,11 @@ import 'package:farmlytics/models/info_card.dart';
 import 'package:farmlytics/models/user_crop.dart';
 import 'package:farmlytics/models/crop.dart';
 import 'package:farmlytics/models/weather.dart';
+import 'package:farmlytics/models/disease.dart';
+import 'package:farmlytics/models/government_program.dart';
+import 'package:farmlytics/screens/profile_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -18,8 +22,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  String? _userName;
-  bool _isLoadingName = true;
   List<InfoCard> _infoCards = [];
   bool _isLoadingCards = true;
   PageController _pageController = PageController();
@@ -32,14 +34,21 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   Weather? _weather;
   bool _isLoadingWeather = true;
   String? _locationError;
+  List<Disease> _diseases = [];
+  bool _isLoadingDiseases = true;
+  List<GovernmentProgram> _governmentPrograms = [];
+  bool _isLoadingGovernmentPrograms = true;
+  String? _userName;
+  bool _isLoadingName = true;
 
   @override
   void initState() {
     super.initState();
     _fetchUserName();
     _fetchInfoCards();
-    _fetchUserCrops();
+    _fetchUserCrops(); // This will call _fetchDiseases() after crops are loaded
     _fetchWeather();
+    _fetchGovernmentPrograms();
     _startAutoScroll();
   }
 
@@ -71,9 +80,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }
 
   String _getFirstName() {
-    if (_userName == null || _userName!.isEmpty) return 'User';
+    if (_userName == null || _userName!.isEmpty) return 'user';
     final parts = _userName!.trim().split(' ');
-    return parts.isNotEmpty ? parts.first : 'User';
+    return parts.isNotEmpty ? parts.first.toLowerCase() : 'user';
   }
 
   Future<void> _fetchInfoCards() async {
@@ -133,6 +142,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           _userCrops = crops;
           _isLoadingUserCrops = false;
         });
+        // Fetch diseases after user crops are loaded
+        _fetchDiseases();
       }
     } catch (e) {
       if (mounted) {
@@ -140,7 +151,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           _userCrops = [];
           _isLoadingUserCrops = false;
         });
+        // Still try to fetch diseases even if user crops fail
+        _fetchDiseases();
       }
+      print('Error fetching user crops: $e');
     }
   }
 
@@ -191,7 +205,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
       if (permission == LocationPermission.deniedForever) {
         setState(() {
-          _locationError = 'Location permission permanently denied. Enable in settings.';
+          _locationError =
+              'Location permission permanently denied. Enable in settings.';
           _isLoadingWeather = false;
         });
         return;
@@ -226,11 +241,100 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Future<void> _fetchDiseases() async {
+    try {
+      setState(() {
+        _isLoadingDiseases = true;
+      });
+
+      final allDiseases = await AuthService().getCommonDiseases();
+
+      // Get user's crop names
+      final userCropNames = _userCrops
+          .where((userCrop) => userCrop.crop != null)
+          .map((userCrop) => userCrop.crop!.name)
+          .toSet();
+
+      // Filter diseases that affect user's crops
+      final relevantDiseases = allDiseases.where((disease) {
+        // If disease affects "All crops", include it
+        if (disease.affectedCrops.any(
+          (crop) => crop.toLowerCase() == 'all crops',
+        )) {
+          return true;
+        }
+
+        // Check if any of the user's crops are affected by this disease
+        return disease.affectedCrops.any((affectedCrop) {
+          return userCropNames.any(
+            (userCrop) =>
+                userCrop.toLowerCase().contains(affectedCrop.toLowerCase()) ||
+                affectedCrop.toLowerCase().contains(userCrop.toLowerCase()),
+          );
+        });
+      }).toList();
+
+      // Sort diseases by severity (severe first, then moderate, then mild)
+      relevantDiseases.sort((a, b) {
+        const severityOrder = {'severe': 0, 'moderate': 1, 'mild': 2};
+        final aOrder = severityOrder[a.severity.toLowerCase()] ?? 3;
+        final bOrder = severityOrder[b.severity.toLowerCase()] ?? 3;
+
+        if (aOrder != bOrder) {
+          return aOrder.compareTo(bOrder);
+        }
+
+        // If same severity, sort alphabetically by name
+        return a.name.compareTo(b.name);
+      });
+
+      if (mounted) {
+        setState(() {
+          _diseases = relevantDiseases;
+          _isLoadingDiseases = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _diseases = [];
+          _isLoadingDiseases = false;
+        });
+      }
+      print('Disease fetch error: $e');
+    }
+  }
+
+  Future<void> _fetchGovernmentPrograms() async {
+    try {
+      setState(() {
+        _isLoadingGovernmentPrograms = true;
+      });
+
+      final programs = await AuthService().getActiveGovernmentPrograms();
+
+      if (mounted) {
+        setState(() {
+          _governmentPrograms = programs;
+          _isLoadingGovernmentPrograms = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _governmentPrograms = [];
+          _isLoadingGovernmentPrograms = false;
+        });
+      }
+      print('Government programs fetch error: $e');
+    }
+  }
+
   Widget _buildWeatherBar() {
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 8, 30, 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      height: 60,
+      constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
         color:
             _weather?.backgroundColor.withOpacity(0.1) ??
@@ -286,25 +390,27 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                     ),
                   ),
                 ),
-                 TextButton(
-                   onPressed: _locationError!.contains('permanently denied') 
-                       ? () async {
-                           await Geolocator.openAppSettings();
-                         }
-                       : _fetchWeather,
-                   style: TextButton.styleFrom(
-                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                     minimumSize: Size.zero,
-                   ),
-                   child: Text(
-                     _locationError!.contains('permanently denied') ? 'Settings' : 'Retry',
-                     style: TextStyle(
-                       color: Color(0xFF1FBA55),
-                       fontSize: 12,
-                       fontWeight: FontWeight.w500,
-                     ),
-                   ),
-                 ),
+                TextButton(
+                  onPressed: _locationError!.contains('permanently denied')
+                      ? () async {
+                          await Geolocator.openAppSettings();
+                        }
+                      : _fetchWeather,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                  ),
+                  child: Text(
+                    _locationError!.contains('permanently denied')
+                        ? 'Settings'
+                        : 'Retry',
+                    style: TextStyle(
+                      color: Color(0xFF1FBA55),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             )
           : _weather != null
@@ -363,15 +469,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         _weather!.weatherMessage,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.white.withOpacity(0.8),
                           fontStyle: FontStyle.italic,
+                          height: 1.2,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -401,7 +508,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -472,52 +579,61 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           children: [
                             _isLoadingName
                                 ? Text(
-                                    'farmlytics',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w300,
-                                      fontFamily: 'FunnelDisplay',
-                                      color: Colors.white,
-                                      letterSpacing: -0.5,
+                              'farmlytics',
+                              style: TextStyle(
+                                      fontSize: 28,
+                                fontWeight: FontWeight.w300,
+                                fontFamily: 'FunnelDisplay',
+                                color: Colors.white,
+                                      letterSpacing: -0.8,
                                     ),
                                   )
                                 : Text(
-                                    'hi, ${_getFirstName()}!',
+                                    'hi, ${_getFirstName()}',
                                     style: TextStyle(
-                                      fontSize: 24,
+                                      fontSize: 28,
                                       fontWeight: FontWeight.w500,
                                       fontFamily: 'FunnelDisplay',
                                       color: Colors.white,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
+                                      letterSpacing: -0.8,
+                              ),
+                            ),
                             Text(
                               'welcome to farmlytics',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
-                                letterSpacing: 0.5,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                            color: const Color(0xFF1FBA55).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.15),
+                              color: const Color(0xFF1FBA55).withOpacity(0.3),
                             width: 0.5,
                           ),
                         ),
                         child: Icon(
-                          Icons.settings_outlined,
-                          color: Colors.white.withOpacity(0.8),
+                            Icons.person_outline,
+                            color: const Color(0xFF1FBA55),
                           size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -552,58 +668,18 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
               const SizedBox(height: 32),
 
-              // Quick Actions Grid
+              // Most Common Diseases Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        fontFamily: 'FunnelDisplay',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.2,
-                      children: [
-                        _buildActionCard(
-                          icon: Icons.chat_outlined,
-                          title: 'AI Chat',
-                          subtitle: 'Ask farming questions',
-                          color: const Color(0xFF1DB954),
-                        ),
-                        _buildActionCard(
-                          icon: Icons.wb_sunny_outlined,
-                          title: 'Weather',
-                          subtitle: 'Check forecast',
-                          color: const Color(0xFF2196F3),
-                        ),
-                        _buildActionCard(
-                          icon: Icons.analytics_outlined,
-                          title: 'Analytics',
-                          subtitle: 'View farm data',
-                          color: const Color(0xFF9C27B0),
-                        ),
-                        _buildActionCard(
-                          icon: Icons.schedule_outlined,
-                          title: 'Schedule',
-                          subtitle: 'Plan activities',
-                          color: const Color(0xFFFF9800),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                child: _buildDiseasesSection(),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Government Programs Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildGovernmentProgramsSection(),
               ),
 
               const SizedBox(height: 32),
@@ -647,131 +723,20 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 32),
-
-                    // Recent Activity
-                    Text(
-                      'Recent Activity',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        fontFamily: 'FunnelDisplay',
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.history_outlined,
-                            color: Colors.white.withOpacity(0.4),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No recent activity',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withOpacity(0.6),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Start using farmlytics to see your activity here',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.4),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 100), // Bottom padding
+              const SizedBox(height: 80),
+
+              // Footer
+              _buildFooter(),
+
+              const SizedBox(height: 32), // Bottom padding
             ]),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            // TODO: Implement action
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 22),
-                ),
-                const Spacer(),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -783,9 +748,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
       ),
       child: Column(
@@ -847,36 +812,36 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text('👋', style: TextStyle(fontSize: 24)),
-                const SizedBox(width: 12),
-                Text(
-                  'Welcome Back',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    fontFamily: 'FunnelDisplay',
-                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text('👋', style: TextStyle(fontSize: 24)),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Welcome Back',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            fontFamily: 'FunnelDisplay',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
               'Ready to optimize your farming with insights and recommendations.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
       );
     }
 
@@ -1023,16 +988,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+              Text(
           'My Crops',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-            fontFamily: 'FunnelDisplay',
-          ),
-        ),
-        const SizedBox(height: 16),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  fontFamily: 'FunnelDisplay',
+                ),
+              ),
+              const SizedBox(height: 16),
         _isLoadingUserCrops
             ? Container(
                 height: 80,
@@ -1067,7 +1032,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     return Container(
       margin: const EdgeInsets.only(right: 12),
       child: Column(
-        children: [
+                children: [
           Container(
             width: 60,
             height: 60,
@@ -1110,9 +1075,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+                  ),
+                ],
+              ),
     );
   }
 
@@ -1134,12 +1099,12 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+              Text(
             'Add',
-            style: TextStyle(
+                style: TextStyle(
               fontSize: 10,
               color: Colors.white.withOpacity(0.8),
-              fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1189,8 +1154,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: 'FunnelDisplay',
+                  color: Colors.white,
+                  fontFamily: 'FunnelDisplay',
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1277,7 +1242,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               const SizedBox(height: 16),
 
               // Crops list
-              Expanded(
+                  Expanded(
                 child: FutureBuilder<List<Crop>>(
                   future: AuthService().getCrops(),
                   builder: (context, snapshot) {
@@ -1312,10 +1277,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                                 fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
+                ],
+              ),
                       );
                     }
 
@@ -1412,7 +1377,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                 ),
                                 if (crop.description != null) ...[
                                   const SizedBox(height: 4),
-                                  Text(
+              Text(
                                     crop.description!,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.6),
@@ -1447,6 +1412,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                       );
                                       Navigator.of(context).pop();
                                       _fetchUserCrops(); // Refresh the crops list
+                                      _fetchDiseases(); // Refresh diseases for new crops
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -1485,6 +1451,593 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDiseasesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Common Diseases for Your Crops',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  fontFamily: 'FunnelDisplay',
+                ),
+              ),
+              const SizedBox(height: 16),
+        _isLoadingDiseases
+            ? Container(
+                height: 200,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1FBA55),
+                    ),
+                  ),
+                ),
+              )
+            : _diseases.isEmpty
+            ? Container(
+                height: 120,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                        Icons.bug_report_outlined,
+                      color: Colors.white.withOpacity(0.4),
+                        size: 32,
+                    ),
+                      const SizedBox(height: 8),
+                    Text(
+                        _userCrops.isEmpty
+                            ? 'Add crops to see relevant diseases'
+                            : 'No diseases found for your crops',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                          fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              )
+            : SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _diseases.length,
+                  itemBuilder: (context, index) {
+                    final disease = _diseases[index];
+                    return _buildDiseaseCard(disease);
+                  },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDiseaseCard(Disease disease) {
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+          // Disease Image
+                Container(
+            height: 80,
+                  decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              color: Colors.white.withOpacity(0.1),
+            ),
+            child: disease.hasImage
+                ? ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      disease.imageUrl,
+                      width: double.infinity,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: double.infinity,
+                          height: 80,
+                          color: disease.severityColor.withOpacity(0.1),
+                          child: Icon(
+                            Icons.bug_report,
+                            color: disease.severityColor,
+                            size: 32,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Container(
+                    width: double.infinity,
+                    height: 80,
+                    color: disease.severityColor.withOpacity(0.1),
+                    child: Icon(
+                      Icons.bug_report,
+                      color: disease.severityColor,
+                      size: 32,
+                    ),
+                  ),
+          ),
+
+          // Disease Info
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title and Severity
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          disease.name,
+                  style: const TextStyle(
+                            fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                            fontFamily: 'FunnelDisplay',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: disease.severityColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: disease.severityColor.withOpacity(0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              disease.severityIcon,
+                              color: disease.severityColor,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                Text(
+                              disease.severityLabel,
+                              style: TextStyle(
+                                color: disease.severityColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Description
+                  Text(
+                    disease.shortDescription,
+                  style: TextStyle(
+                    fontSize: 11,
+                      color: Colors.white.withOpacity(0.8),
+                      height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                  const Spacer(),
+
+                  // Affected Crops
+                  Text(
+                    'Affects: ${disease.affectedCropsText}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withOpacity(0.6),
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGovernmentProgramsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Government Programs',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+            fontFamily: 'FunnelDisplay',
+          ),
+        ),
+        const SizedBox(height: 16),
+        _isLoadingGovernmentPrograms
+            ? Container(
+                height: 180,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1FBA55),
+                    ),
+                  ),
+                ),
+              )
+            : _governmentPrograms.isEmpty
+            ? Container(
+                height: 120,
+      padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance,
+                        color: Colors.white.withOpacity(0.4),
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No government programs available',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _governmentPrograms.length,
+                  itemBuilder: (context, index) {
+                    final program = _governmentPrograms[index];
+                    return _buildGovernmentProgramCard(program);
+                  },
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildGovernmentProgramCard(GovernmentProgram program) {
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Program Image
+          Container(
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              color: Colors.white.withOpacity(0.1),
+            ),
+            child: program.hasImage
+                ? ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      program.imageUrl,
+                      width: double.infinity,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: double.infinity,
+                          height: 80,
+                          color: program.categoryColor.withOpacity(0.1),
+                          child: Icon(
+                            program.categoryIcon,
+                            color: program.categoryColor,
+                            size: 32,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Container(
+                    width: double.infinity,
+                    height: 80,
+                    color: program.categoryColor.withOpacity(0.1),
+                    child: Icon(
+                      program.categoryIcon,
+                      color: program.categoryColor,
+                      size: 32,
+                    ),
+                  ),
+          ),
+
+          // Program Info
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title and Category
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          program.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            fontFamily: 'FunnelDisplay',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: program.categoryColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: program.categoryColor.withOpacity(0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              program.categoryIcon,
+                              color: program.categoryColor,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+          Text(
+                              program.categoryLabel,
+            style: TextStyle(
+                                color: program.categoryColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Description
+          Text(
+                    program.shortDescription,
+            style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.8),
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const Spacer(),
+
+                  // Amount and Deadline
+                  Row(
+                    children: [
+                      if (program.maxAmount != null) ...[
+                        Icon(
+                          Icons.account_balance_wallet,
+                          color: const Color(0xFF1FBA55),
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          program.formattedAmount,
+                          style: const TextStyle(
+                            color: Color(0xFF1FBA55),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      if (program.deadline != null) ...[
+                        const Spacer(),
+                        Icon(
+                          Icons.schedule,
+                          color: program.isUrgent
+                              ? const Color(0xFFE53E3E)
+                              : Colors.white.withOpacity(0.6),
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Deadline',
+                          style: TextStyle(
+                            color: program.isUrgent
+                                ? const Color(0xFFE53E3E)
+                                : Colors.white.withOpacity(0.6),
+                            fontSize: 10,
+                            fontWeight: program.isUrgent
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        children: [
+          // Main tagline left aligned
+          Text(
+            'Helping Farmers Grow',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'FunnelDisplay',
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.left,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Bottom section with name and SIH info left aligned
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+          Text(
+                    'Designed and Developed by ',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.5),
+              fontWeight: FontWeight.w400,
+            ),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      try {
+                        final Uri url = Uri.parse('https://ashuwhy.com');
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          // Fallback: try with platformDefault mode
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.platformDefault,
+                          );
+                        }
+                      } catch (e) {
+                        print('Error launching URL: $e');
+                        // Show a snackbar to inform user
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Could not open link: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: Text(
+                      'Ashutosh Sharma',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: const Color(0xFF1FBA55),
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(
+                          0xFF1FBA55,
+                        ).withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'SIH • Farmlytics • IIT Khargpur • © 2025',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.4),
+                  fontWeight: FontWeight.w400,
+                ),
+                textAlign: TextAlign.left,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

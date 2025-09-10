@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:farmlytics/screens/home_screen.dart';
+import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/models/crop.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,6 +16,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _currentPage = 0;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  List<Crop> _allCrops = [];
+  List<Crop> _filteredCrops = [];
+  List<String> _selectedCropIds = [];
+  bool _isLoadingCrops = true;
 
   final List<OnboardingData> _pages = [
     OnboardingData(
@@ -44,6 +50,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           'Monitor your farm\'s performance with detailed analytics and personalized recommendations.',
       color: const Color(0xFF9C27B0),
     ),
+    OnboardingData(
+      icon: Icons.grass_outlined,
+      title: 'Add Your Crops',
+      description:
+          'Select the crops you grow to get personalized insights, disease alerts, and government program recommendations.',
+      color: const Color(0xFF1FBA55),
+    ),
   ];
 
   @override
@@ -57,6 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
     );
     _fadeController.forward();
+    _fetchCrops();
   }
 
   @override
@@ -77,7 +91,64 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
-  void _goToHome() {
+  Future<void> _fetchCrops() async {
+    try {
+      final crops = await AuthService().getCrops();
+      if (mounted) {
+        setState(() {
+          _allCrops = crops;
+          _filteredCrops = crops;
+          _isLoadingCrops = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingCrops = false;
+        });
+      }
+    }
+  }
+
+  void _filterCrops(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredCrops = _allCrops;
+      } else {
+        _filteredCrops = _allCrops.where((crop) {
+          return crop.name.toLowerCase().contains(query.toLowerCase()) ||
+              crop.category.toLowerCase().contains(query.toLowerCase());
+        }).toList();
+      }
+    });
+  }
+
+  void _toggleCropSelection(String cropId) {
+    setState(() {
+      if (_selectedCropIds.contains(cropId)) {
+        _selectedCropIds.remove(cropId);
+      } else {
+        _selectedCropIds.add(cropId);
+      }
+    });
+  }
+
+  Future<void> _saveSelectedCrops() async {
+    try {
+      for (String cropId in _selectedCropIds) {
+        await AuthService().addCropToUserFarm(cropId: cropId);
+      }
+    } catch (e) {
+      // Handle error silently for now
+    }
+  }
+
+  void _goToHome() async {
+    // Save selected crops if we're on the crop selection page
+    if (_currentPage == _pages.length - 1 && _selectedCropIds.isNotEmpty) {
+      await _saveSelectedCrops();
+    }
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
@@ -142,6 +213,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     },
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
+                      if (index == _pages.length - 1) {
+                        return _buildCropSelectionPage();
+                      }
                       return _buildPage(_pages[index]);
                     },
                   ),
@@ -270,6 +344,235 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               letterSpacing: 0.3,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCropSelectionPage() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+
+          // Header
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1FBA55).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: const Color(0xFF1FBA55).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: const Icon(
+              Icons.grass_outlined,
+              color: Color(0xFF1FBA55),
+              size: 60,
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Title
+          const Text(
+            'Add Your Crops',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'FunnelDisplay',
+              height: 1.2,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Description
+          Text(
+            'Select the crops you grow to get personalized insights and recommendations.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.7),
+              height: 1.5,
+              letterSpacing: 0.3,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Search bar
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: TextField(
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              cursorColor: const Color(0xFF1FBA55),
+              decoration: InputDecoration(
+                hintText: 'Search crops...',
+                hintStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.4),
+                  fontSize: 15,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.white.withOpacity(0.6),
+                  size: 20,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                filled: false,
+                isDense: true,
+              ),
+              onChanged: _filterCrops,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Crops list
+          Expanded(
+            child: _isLoadingCrops
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF1FBA55),
+                      ),
+                    ),
+                  )
+                : _filteredCrops.isEmpty
+                ? Center(
+                    child: Text(
+                      'No crops found',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: _filteredCrops.length,
+                    itemBuilder: (context, index) {
+                      final crop = _filteredCrops[index];
+                      final isSelected = _selectedCropIds.contains(crop.id);
+
+                      return GestureDetector(
+                        onTap: () => _toggleCropSelection(crop.id),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF1FBA55).withOpacity(0.2)
+                                : Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF1FBA55).withOpacity(0.5)
+                                  : Colors.white.withOpacity(0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: crop.categoryColor.withOpacity(0.1),
+                                ),
+                                child: crop.hasIcon
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          crop.iconUrl!,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                                return Icon(
+                                                  Icons.grass,
+                                                  color: crop.categoryColor,
+                                                  size: 20,
+                                                );
+                                              },
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.grass,
+                                        color: crop.categoryColor,
+                                        size: 20,
+                                      ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                crop.name,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (isSelected)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF1FBA55),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Selected count
+          if (_selectedCropIds.isNotEmpty)
+            Text(
+              '${_selectedCropIds.length} crop${_selectedCropIds.length == 1 ? '' : 's'} selected',
+              style: TextStyle(
+                color: const Color(0xFF1FBA55),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
         ],
       ),
     );

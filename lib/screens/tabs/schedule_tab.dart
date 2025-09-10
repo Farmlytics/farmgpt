@@ -52,16 +52,16 @@ class _ScheduleTabState extends State<ScheduleTab>
     super.build(context);
     return CustomScrollView(
       slivers: [
-        // App Bar
+        // Custom App Bar
         SliverAppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           floating: true,
           snap: true,
-          expandedHeight: 100,
+          expandedHeight: 80,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(30, 8, 30, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -73,41 +73,47 @@ class _ScheduleTabState extends State<ScheduleTab>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Schedule',
+                              'schedule',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'FunnelDisplay',
                                 color: Colors.white,
-                                letterSpacing: -0.5,
+                                letterSpacing: -0.8,
                               ),
                             ),
                             Text(
-                              'Plan your farming activities',
+                              'plan your farming activities',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
                                 fontWeight: FontWeight.w400,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.15),
-                            width: 0.5,
+                      GestureDetector(
+                        onTap: () {
+                          // TODO: Add new schedule item
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1FBA55).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFF1FBA55).withOpacity(0.3),
+                              width: 0.5,
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          Icons.add_outlined,
-                          color: Colors.white.withOpacity(0.8),
-                          size: 20,
+                          child: Icon(
+                            Icons.add_outlined,
+                            color: const Color(0xFF1FBA55),
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -120,63 +126,79 @@ class _ScheduleTabState extends State<ScheduleTab>
 
         // Content
         SliverPadding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(0),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Quick Stats
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      title: 'Today',
-                      value: '2',
-                      subtitle: 'Tasks',
-                      color: const Color(0xFFFF9800),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Today',
+                        value: '2',
+                        subtitle: 'Tasks',
+                        color: const Color(0xFFFF9800),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      title: 'This Week',
-                      value: '8',
-                      subtitle: 'Tasks',
-                      color: const Color(0xFF1FBA55),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'This Week',
+                        value: '8',
+                        subtitle: 'Tasks',
+                        color: const Color(0xFF1FBA55),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      title: 'Completed',
-                      value: '15',
-                      subtitle: 'This month',
-                      color: const Color(0xFF2196F3),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Completed',
+                        value: '15',
+                        subtitle: 'This month',
+                        color: const Color(0xFF2196F3),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
               const SizedBox(height: 32),
 
               // Calendar
-              _buildCalendar(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildCalendar(),
+              ),
 
               const SizedBox(height: 32),
 
               // Schedule List
-              Text(
-                'Upcoming Tasks',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  fontFamily: 'FunnelDisplay',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Upcoming Tasks',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontFamily: 'FunnelDisplay',
+                  ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
               // Tasks
-              ..._scheduleItems.map((item) => _buildScheduleItem(item)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: _scheduleItems
+                      .map((item) => _buildScheduleItem(item))
+                      .toList(),
+                ),
+              ),
 
               const SizedBox(height: 100), // Bottom padding
             ]),

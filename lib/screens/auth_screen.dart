@@ -160,6 +160,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      resizeToAvoidBottomInset: false,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -174,327 +175,349 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         child: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnimation,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-
-                  // App Logo/Title with Hero animation
-                  Center(
+            child: Column(
+              children: [
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Hero(
-                          tag: 'app_logo',
-                          child: FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.asset(
-                                  'assets/icon/icon_splash.png',
-                                  width: 72,
-                                  height: 72,
-                                  fit: BoxFit.contain,
+                        const SizedBox(height: 40),
+
+                        // App Logo/Title with Hero animation
+                        Center(
+                          child: Column(
+                            children: [
+                              Hero(
+                                tag: 'app_logo',
+                                child: FadeTransition(
+                                  opacity: _fadeAnimation,
+                                  child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(24),
+                                      child: Image.asset(
+                                        'assets/icon/icon_splash.png',
+                                        width: 72,
+                                        height: 72,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 24),
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: Text(
+                                  'farmlytics',
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w200,
+                                    fontFamily: 'FunnelDisplay',
+                                    color: Colors.white,
+                                    letterSpacing: -1.2,
+                                    height: 1.0,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: Text(
+                                  'AI-Powered Farming Assistant',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+
+                        const SizedBox(height: 60),
+
+                        // Title with animation
                         FadeTransition(
                           opacity: _fadeAnimation,
                           child: Text(
-                            'farmlytics',
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w200,
-                              fontFamily: 'FunnelDisplay',
+                            _isSignUp
+                                ? 'Create your account'
+                                : 'Sign in with phone',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w500,
                               color: Colors.white,
-                              letterSpacing: -1.2,
-                              height: 1.0,
+                              fontFamily: 'FunnelDisplay',
+                              letterSpacing: -0.3,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+
+                        const SizedBox(height: 18),
+
+                        // Form with animation
                         FadeTransition(
                           opacity: _fadeAnimation,
-                          child: Text(
-                            'AI-Powered Farming Assistant',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.white.withOpacity(0.7),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 0.3,
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                // Name field (only for sign up)
+                                if (_isSignUp) ...[
+                                  _buildTextField(
+                                    controller: _nameController,
+                                    label: 'Full name',
+                                    icon: Icons.person_outlined,
+                                    keyboardType: TextInputType.name,
+                                    validator: (value) {
+                                      if (_isSignUp &&
+                                          (value == null || value.isEmpty)) {
+                                        return 'Please enter your full name';
+                                      }
+                                      if (_isSignUp && value!.length < 2) {
+                                        return 'Name must be at least 2 characters';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+
+                                // Phone field
+                                _buildTextField(
+                                  controller: _phoneController,
+                                  label: 'Phone number',
+                                  icon: Icons.phone_outlined,
+                                  keyboardType: TextInputType.phone,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your phone number';
+                                    }
+                                    // Normalize to +91 if user did not include country code
+                                    final normalized = value.startsWith('+')
+                                        ? value
+                                        : '+91${value.replaceAll(RegExp(r'[^0-9]'), '')}';
+                                    if (!RegExp(
+                                      r'^\+?[1-9]\d{7,14}$',
+                                    ).hasMatch(normalized)) {
+                                      return 'Enter a valid phone number with country code';
+                                    }
+                                    return null;
+                                  },
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                // OTP field (after code sent) with animation
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeInOut,
+                                  height: _codeSent ? null : 0,
+                                  child: _codeSent
+                                      ? Column(
+                                          children: [
+                                            _buildTextField(
+                                              controller: _otpController,
+                                              label: 'OTP code',
+                                              icon: Icons.lock_clock_outlined,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              validator: (value) {
+                                                if (!_codeSent) return null;
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return 'Enter the OTP code';
+                                                }
+                                                if (value.length < 4) {
+                                                  return 'OTP seems too short';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            const SizedBox(height: 4),
+                                          ],
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                // Auth Button with enhanced styling
+                                Container(
+                                  width: double.infinity,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF1FBA55),
+                                        Color(0xFF1ED760),
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF1FBA55,
+                                        ).withOpacity(0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                        spreadRadius: 0,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: _isLoading ? null : _handleAuth,
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        child: _isLoading
+                                            ? const SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
+                                                ),
+                                              )
+                                            : Text(
+                                                _codeSent
+                                                    ? 'Verify OTP'
+                                                    : (_isSignUp
+                                                          ? 'Create Account'
+                                                          : 'Send OTP'),
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                if (_codeSent)
+                                  TextButton(
+                                    onPressed: _isLoading || _resendSeconds > 0
+                                        ? null
+                                        : () async {
+                                            try {
+                                              await AuthService()
+                                                  .signInWithPhone(
+                                                    phone: _phoneController.text
+                                                        .trim(),
+                                                  );
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('OTP resent'),
+                                                  ),
+                                                );
+                                                _startResendTimer();
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      e.toString().replaceAll(
+                                                        'Exception: ',
+                                                        '',
+                                                      ),
+                                                    ),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                    child: Text(
+                                      _resendSeconds > 0
+                                          ? 'Resend in ${_resendSeconds}s'
+                                          : 'Resend OTP',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+
+                                const SizedBox(height: 24),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 60),
-
-                  // Title with animation
-                  FadeTransition(
+                // Fixed bottom section with toggle
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Text(
-                      _isSignUp ? 'Create your account' : 'Sign in with phone',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        fontFamily: 'FunnelDisplay',
-                        letterSpacing: -0.3,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _isSignUp
+                              ? 'Already have an account? '
+                              : 'Don\'t have an account? ',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isSignUp = !_isSignUp;
+                              _codeSent = false;
+                              _nameController.clear();
+                              _phoneController.clear();
+                              _otpController.clear();
+                              _resendTimer?.cancel();
+                              _resendSeconds = 0;
+                            });
+                          },
+                          child: Text(
+                            _isSignUp ? 'Sign In' : 'Sign Up',
+                            style: const TextStyle(
+                              color: Color(0xFF1FBA55),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-
-                  const SizedBox(height: 18),
-
-                  // Form with animation
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // Name field (only for sign up)
-                          if (_isSignUp) ...[
-                            _buildTextField(
-                              controller: _nameController,
-                              label: 'Full name',
-                              icon: Icons.person_outlined,
-                              keyboardType: TextInputType.name,
-                              validator: (value) {
-                                if (_isSignUp &&
-                                    (value == null || value.isEmpty)) {
-                                  return 'Please enter your full name';
-                                }
-                                if (_isSignUp && value!.length < 2) {
-                                  return 'Name must be at least 2 characters';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-
-                          // Phone field
-                          _buildTextField(
-                            controller: _phoneController,
-                            label: 'Phone number',
-                            icon: Icons.phone_outlined,
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your phone number';
-                              }
-                              // Normalize to +91 if user did not include country code
-                              final normalized = value.startsWith('+')
-                                  ? value
-                                  : '+91${value.replaceAll(RegExp(r'[^0-9]'), '')}';
-                              if (!RegExp(
-                                r'^\+?[1-9]\d{7,14}$',
-                              ).hasMatch(normalized)) {
-                                return 'Enter a valid phone number with country code';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // OTP field (after code sent) with animation
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
-                            height: _codeSent ? null : 0,
-                            child: _codeSent
-                                ? Column(
-                                    children: [
-                                      _buildTextField(
-                                        controller: _otpController,
-                                        label: 'OTP code',
-                                        icon: Icons.lock_clock_outlined,
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (!_codeSent) return null;
-                                          if (value == null || value.isEmpty) {
-                                            return 'Enter the OTP code';
-                                          }
-                                          if (value.length < 4) {
-                                            return 'OTP seems too short';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 4),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // Auth Button with enhanced styling
-                          Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF1FBA55), Color(0xFF1ED760)],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF1FBA55,
-                                  ).withOpacity(0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: _isLoading ? null : _handleAuth,
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                  Colors.white,
-                                                ),
-                                          ),
-                                        )
-                                      : Text(
-                                          _codeSent
-                                              ? 'Verify OTP'
-                                              : (_isSignUp
-                                                    ? 'Create Account'
-                                                    : 'Send OTP'),
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                            letterSpacing: 0.3,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (_codeSent)
-                            TextButton(
-                              onPressed: _isLoading || _resendSeconds > 0
-                                  ? null
-                                  : () async {
-                                      try {
-                                        await AuthService().signInWithPhone(
-                                          phone: _phoneController.text.trim(),
-                                        );
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('OTP resent'),
-                                            ),
-                                          );
-                                          _startResendTimer();
-                                        }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                e.toString().replaceAll(
-                                                  'Exception: ',
-                                                  '',
-                                                ),
-                                              ),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                              child: Text(
-                                _resendSeconds > 0
-                                    ? 'Resend in ${_resendSeconds}s'
-                                    : 'Resend OTP',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-
-                          const SizedBox(height: 24),
-
-                          // Toggle between Sign Up and Sign In
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _isSignUp
-                                    ? 'Already have an account? '
-                                    : 'Don\'t have an account? ',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isSignUp = !_isSignUp;
-                                    _codeSent = false;
-                                    _nameController.clear();
-                                    _phoneController.clear();
-                                    _otpController.clear();
-                                    _resendTimer?.cancel();
-                                    _resendSeconds = 0;
-                                  });
-                                },
-                                child: Text(
-                                  _isSignUp ? 'Sign In' : 'Sign Up',
-                                  style: const TextStyle(
-                                    color: Color(0xFF1FBA55),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
