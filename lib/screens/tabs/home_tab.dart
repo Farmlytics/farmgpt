@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
 import 'package:farmlytics/models/info_card.dart';
 import 'package:farmlytics/models/user_crop.dart';
 import 'package:farmlytics/models/crop.dart';
@@ -8,6 +9,7 @@ import 'package:farmlytics/models/weather.dart';
 import 'package:farmlytics/models/disease.dart';
 import 'package:farmlytics/models/government_program.dart';
 import 'package:farmlytics/screens/profile_screen.dart';
+import 'package:farmlytics/widgets/translated_text.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -24,7 +26,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
   List<InfoCard> _infoCards = [];
   bool _isLoadingCards = true;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   Timer? _autoScrollTimer;
   int _currentCardIndex = 0;
   List<UserCrop> _userCrops = [];
@@ -107,8 +109,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   }
 
   void _startAutoScroll() {
-    if (_infoCards.length <= 1)
+    if (_infoCards.length <= 1) {
       return; // Don't auto-scroll if only one card or no cards
+    }
 
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
@@ -184,7 +187,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
-          _locationError = 'Location services are disabled';
+          _locationError = LanguageService.t('location_services_disabled');
           _isLoadingWeather = false;
         });
         return;
@@ -196,7 +199,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           setState(() {
-            _locationError = 'Location permission denied';
+            _locationError = LanguageService.t('location_permission_denied');
             _isLoadingWeather = false;
           });
           return;
@@ -205,8 +208,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
       if (permission == LocationPermission.deniedForever) {
         setState(() {
-          _locationError =
-              'Location permission permanently denied. Enable in settings.';
+          _locationError = LanguageService.t(
+            'location_permission_permanently_denied',
+          );
           _isLoadingWeather = false;
         });
         return;
@@ -233,7 +237,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _locationError = 'Failed to get location: ${e.toString()}';
+          _locationError =
+              '${LanguageService.t('failed_to_get_location')}: ${e.toString()}';
           _isLoadingWeather = false;
         });
       }
@@ -362,7 +367,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Getting weather...',
+                  LanguageService.t('getting_weather'),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 14,
@@ -402,8 +407,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   child: Text(
                     _locationError!.contains('permanently denied')
-                        ? 'Settings'
-                        : 'Retry',
+                        ? LanguageService.t('settings')
+                        : LanguageService.t('retry'),
                     style: TextStyle(
                       color: Color(0xFF1FBA55),
                       fontSize: 12,
@@ -449,22 +454,28 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            _weather!.formattedTemp,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: 'FunnelDisplay',
+                          Flexible(
+                            child: Text(
+                              _weather!.formattedTemp,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontFamily: 'FunnelDisplay',
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            _weather!.location,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.7),
-                              fontWeight: FontWeight.w400,
+                          Flexible(
+                            child: Text(
+                              _weather!.location,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.7),
+                                fontWeight: FontWeight.w400,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -540,7 +551,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Weather unavailable',
+                  LanguageService.t('weather_unavailable'),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 14,
@@ -589,7 +600,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                     ),
                                   )
                                 : Text(
-                                    'hi, ${_getFirstName()}',
+                                    '${LanguageService.t('hi')}, ${_getFirstName()}',
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w500,
@@ -599,7 +610,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                     ),
                                   ),
                             Text(
-                              'welcome to farmlytics',
+                              LanguageService.t('welcome_to_farmlytics'),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
@@ -608,6 +619,43 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      // Debug Translation Button
+                      GestureDetector(
+                        onTap: () async {
+                          print('🧪 Testing translation...');
+                          await LanguageService.debugTranslation();
+                          final result = await LanguageService.translateText(
+                            'Rice',
+                          );
+                          print('🧪 Translation result: $result');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Translation test: Rice -> $result',
+                              ),
+                              backgroundColor: const Color(0xFF1FBA55),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.orange.withOpacity(0.3),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.bug_report,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
                         ),
                       ),
                       GestureDetector(
@@ -691,7 +739,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Farm Status',
+                      LanguageService.t('farm_status'),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -706,18 +754,18 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       children: [
                         Expanded(
                           child: _buildStatusCard(
-                            title: 'Crops',
+                            title: LanguageService.t('crops'),
                             value: '12',
-                            subtitle: 'Active',
+                            subtitle: LanguageService.t('active'),
                             color: const Color(0xFF1FBA55),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildStatusCard(
-                            title: 'Tasks',
+                            title: LanguageService.t('tasks'),
                             value: '5',
-                            subtitle: 'Pending',
+                            subtitle: LanguageService.t('pending'),
                             color: const Color(0xFFFF9800),
                           ),
                         ),
@@ -898,7 +946,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TranslatedText(
                                 card.title,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -927,7 +975,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    '${card.actionText} - ${card.title}',
+                                    '${card.actionText ?? ''} - ${card.title}',
                                   ),
                                   backgroundColor: card.priorityColor,
                                 ),
@@ -943,7 +991,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                     ),
                     const SizedBox(height: 12),
                     Expanded(
-                      child: Text(
+                      child: TranslatedText(
                         card.description,
                         style: TextStyle(
                           fontSize: 14,
@@ -989,7 +1037,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'My Crops',
+          LanguageService.t('my_crops'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -999,7 +1047,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
         const SizedBox(height: 16),
         _isLoadingUserCrops
-            ? Container(
+            ? SizedBox(
                 height: 80,
                 child: const Center(
                   child: CircularProgressIndicator(
@@ -1066,7 +1114,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
           ),
           const SizedBox(height: 4),
-          Text(
+          TranslatedCropName(
             userCrop.crop?.name ?? 'Unknown',
             style: TextStyle(
               fontSize: 10,
@@ -1100,7 +1148,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           ),
           const SizedBox(height: 4),
           Text(
-            'Add',
+            LanguageService.t('add'),
             style: TextStyle(
               fontSize: 10,
               color: Colors.white.withOpacity(0.8),
@@ -1150,7 +1198,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Add Crop to Your Farm',
+                            LanguageService.t('add_crop_to_farm'),
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w600,
@@ -1160,7 +1208,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Choose from available crops to add to your farming dashboard.',
+                            LanguageService.t('choose_crops_description'),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withOpacity(0.7),
@@ -1273,7 +1321,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Failed to load crops',
+                              LanguageService.t('failed_to_load_crops'),
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                                 fontSize: 16,
@@ -1345,7 +1393,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                       size: 18,
                                     ),
                             ),
-                            title: Text(
+                            title: TranslatedCropName(
                               crop.name,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -1418,7 +1466,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            '${crop.name} added to your farm!',
+                                            '${crop.name} ${LanguageService.t('crop_added_to_farm')}',
                                           ),
                                           backgroundColor: const Color(
                                             0xFF1FBA55,
@@ -1432,7 +1480,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            'Failed to add ${crop.name}',
+                                            '${LanguageService.t('failed_to_add_crop')} ${crop.name}',
                                           ),
                                           backgroundColor: Colors.red,
                                           behavior: SnackBarBehavior.floating,
@@ -1459,7 +1507,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Common Diseases for Your Crops',
+          LanguageService.t('common_diseases'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -1469,7 +1517,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
         const SizedBox(height: 16),
         _isLoadingDiseases
-            ? Container(
+            ? SizedBox(
                 height: 200,
                 child: const Center(
                   child: CircularProgressIndicator(
@@ -1503,8 +1551,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       const SizedBox(height: 8),
                       Text(
                         _userCrops.isEmpty
-                            ? 'Add crops to see relevant diseases'
-                            : 'No diseases found for your crops',
+                            ? LanguageService.t('add_crops_to_see_diseases')
+                            : LanguageService.t('no_diseases_found'),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.6),
                           fontSize: 14,
@@ -1600,7 +1648,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: TranslatedDiseaseName(
                           disease.name,
                           style: const TextStyle(
                             fontSize: 16,
@@ -1651,7 +1699,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   const SizedBox(height: 6),
 
                   // Description
-                  Text(
+                  TranslatedText(
                     disease.shortDescription,
                     style: TextStyle(
                       fontSize: 11,
@@ -1689,7 +1737,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Government Programs',
+          LanguageService.t('government_programs'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -1699,7 +1747,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
         const SizedBox(height: 16),
         _isLoadingGovernmentPrograms
-            ? Container(
+            ? SizedBox(
                 height: 180,
                 child: const Center(
                   child: CircularProgressIndicator(
@@ -1732,7 +1780,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'No government programs available',
+                        LanguageService.t('no_programs_available'),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.6),
                           fontSize: 14,
@@ -1828,7 +1876,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: TranslatedProgramName(
                           program.name,
                           style: const TextStyle(
                             fontSize: 16,
@@ -1879,7 +1927,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   const SizedBox(height: 6),
 
                   // Description
-                  Text(
+                  TranslatedText(
                     program.shortDescription,
                     style: TextStyle(
                       fontSize: 11,
@@ -1953,7 +2001,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         children: [
           // Main tagline left aligned
           Text(
-            'Helping Farmers Grow',
+            LanguageService.t('helping_farmers_grow'),
             style: TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.w600,
@@ -1973,7 +2021,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               Row(
                 children: [
                   Text(
-                    'Cultivated with ❤️ by ',
+                    LanguageService.t('cultivated_with_love'),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withOpacity(0.5),

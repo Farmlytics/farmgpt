@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -67,23 +68,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            content: const Text(
-              'Are you sure you want to logout?',
-              style: TextStyle(color: Colors.white70),
+            content: Text(
+              LanguageService.t('logout_confirmation'),
+              style: const TextStyle(color: Colors.white70),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: Text(
-                  'Cancel',
+                  LanguageService.t('cancel'),
                   style: TextStyle(color: Colors.white.withOpacity(0.6)),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(
+                child: Text(
+                  LanguageService.t('logout'),
+                  style: const TextStyle(
                     color: Color(0xFFE53E3E),
                     fontWeight: FontWeight.w600,
                   ),
@@ -123,9 +124,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Profile',
-          style: TextStyle(
+        title: Text(
+          LanguageService.t('profile'),
+          style: const TextStyle(
             color: Colors.white,
             fontFamily: 'FunnelDisplay',
             fontWeight: FontWeight.w600,
@@ -197,10 +198,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 40),
 
                   // Profile Options
-                  _buildProfileSection('Account', [
+                  _buildProfileSection(LanguageService.t('account_settings'), [
                     _buildProfileOption(
                       icon: Icons.person_outline,
-                      title: 'Edit Profile',
+                      title: LanguageService.t('edit_profile'),
                       subtitle: 'Update your personal information',
                       onTap: () {
                         // TODO: Implement edit profile
@@ -214,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _buildProfileOption(
                       icon: Icons.notifications_outlined,
-                      title: 'Notifications',
+                      title: LanguageService.t('notifications'),
                       subtitle: 'Manage your notification preferences',
                       onTap: () {
                         // TODO: Implement notification settings
@@ -266,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildProfileSection('Support', [
                     _buildProfileOption(
                       icon: Icons.help_outline,
-                      title: 'Help & Support',
+                      title: LanguageService.t('help_support'),
                       subtitle: 'Get help with using the app',
                       onTap: () {
                         // TODO: Implement help
@@ -280,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _buildProfileOption(
                       icon: Icons.info_outline,
-                      title: 'About',
+                      title: LanguageService.t('about'),
                       subtitle: 'App version and information',
                       onTap: () {
                         // TODO: Implement about
@@ -312,11 +313,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Icon(Icons.logout, size: 20),
                           SizedBox(width: 8),
                           Text(
-                            'Logout',
+                            LanguageService.t('logout'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

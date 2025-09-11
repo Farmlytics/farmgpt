@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:farmlytics/screens/home_screen.dart';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
 import 'package:farmlytics/models/crop.dart';
+import 'package:farmlytics/widgets/translated_text.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -18,44 +20,39 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late Animation<double> _fadeAnimation;
   List<Crop> _allCrops = [];
   List<Crop> _filteredCrops = [];
-  List<String> _selectedCropIds = [];
+  final List<String> _selectedCropIds = [];
   bool _isLoadingCrops = true;
 
-  final List<OnboardingData> _pages = [
+  List<OnboardingData> get _pages => [
+    OnboardingData(
+      icon: Icons.grass_outlined,
+      title: LanguageService.t('add_your_crops'),
+      description: LanguageService.t('select_crops_description'),
+      color: const Color(0xFF1FBA55),
+    ),
     OnboardingData(
       icon: Icons.agriculture_outlined,
-      title: 'Welcome to Farmlytics',
-      description:
-          'Your AI-powered farming assistant that helps you make smarter decisions for better crop yields.',
+      title: LanguageService.t('welcome_to_farmlytics'),
+      description: LanguageService.t('welcome_description'),
       color: const Color(0xFF1FBA55),
     ),
     OnboardingData(
       icon: Icons.schedule_outlined,
-      title: 'Smart Scheduling',
-      description:
-          'Plan and track your farming activities with intelligent scheduling based on weather and crop cycles.',
+      title: LanguageService.t('smart_scheduling'),
+      description: LanguageService.t('scheduling_description'),
       color: const Color(0xFFFF9800),
     ),
     OnboardingData(
       icon: Icons.chat_outlined,
-      title: 'AI Chat Assistant',
-      description:
-          'Get instant answers to your farming questions from our AI assistant trained on agricultural best practices.',
+      title: LanguageService.t('ai_chat_assistant'),
+      description: LanguageService.t('chat_description'),
       color: const Color(0xFF2196F3),
     ),
     OnboardingData(
       icon: Icons.analytics_outlined,
-      title: 'Data-Driven Insights',
-      description:
-          'Monitor your farm\'s performance with detailed analytics and personalized recommendations.',
+      title: LanguageService.t('data_driven_insights'),
+      description: LanguageService.t('insights_description'),
       color: const Color(0xFF9C27B0),
-    ),
-    OnboardingData(
-      icon: Icons.grass_outlined,
-      title: 'Add Your Crops',
-      description:
-          'Select the crops you grow to get personalized insights, disease alerts, and government program recommendations.',
-      color: const Color(0xFF1FBA55),
     ),
   ];
 
@@ -145,8 +142,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _goToHome() async {
     // Save selected crops if we're on the crop selection page
-    if (_currentPage == _pages.length - 1 && _selectedCropIds.isNotEmpty) {
+    if (_currentPage == 0 && _selectedCropIds.isNotEmpty) {
       await _saveSelectedCrops();
+    }
+
+    // Mark onboarding as completed
+    try {
+      await AuthService().markOnboardingCompleted();
+    } catch (e) {
+      // Handle error silently for now
     }
 
     Navigator.of(context).pushReplacement(
@@ -193,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       TextButton(
                         onPressed: _goToHome,
                         child: Text(
-                          'Skip',
+                          LanguageService.t('skip'),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.7),
                             fontSize: 14,
@@ -213,7 +217,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     },
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
-                      if (index == _pages.length - 1) {
+                      if (index == 0) {
                         return _buildCropSelectionPage();
                       }
                       return _buildPage(_pages[index]);
@@ -223,7 +227,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
                 // Page indicators
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -233,7 +237,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+
+                // Selected count (only show on crop selection page)
+                if (_currentPage == 0 && _selectedCropIds.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      '${_selectedCropIds.length} ${_selectedCropIds.length == 1 ? LanguageService.t('crop_selected') : LanguageService.t('crops_selected')}',
+                      style: TextStyle(
+                        color: const Color(0xFF1FBA55),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                if (_currentPage == 0 && _selectedCropIds.isNotEmpty)
+                  const SizedBox(height: 8),
 
                 // Navigation buttons
                 Padding(
@@ -278,8 +299,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ),
                           child: Text(
                             _currentPage == _pages.length - 1
-                                ? 'Get Started'
-                                : 'Next',
+                                ? LanguageService.t('get_started')
+                                : LanguageService.t('next'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -354,35 +375,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          const SizedBox(height: 40),
-
-          // Header
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1FBA55).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: const Color(0xFF1FBA55).withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: const Icon(
-              Icons.grass_outlined,
-              color: Color(0xFF1FBA55),
-              size: 60,
-            ),
-          ),
-
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
 
           // Title
-          const Text(
-            'Add Your Crops',
+          Text(
+            LanguageService.t('add_your_crops'),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 28,
+            style: const TextStyle(
+              fontSize: 24,
               fontWeight: FontWeight.w600,
               color: Colors.white,
               fontFamily: 'FunnelDisplay',
@@ -390,52 +390,52 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Description
           Text(
-            'Select the crops you grow to get personalized insights and recommendations.',
+            LanguageService.t('select_crops_description'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: Colors.white.withOpacity(0.7),
-              height: 1.5,
-              letterSpacing: 0.3,
+              height: 1.4,
+              letterSpacing: 0.2,
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Search bar
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: Colors.white.withOpacity(0.2),
                 width: 1,
               ),
             ),
             child: TextField(
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
               cursorColor: const Color(0xFF1FBA55),
               decoration: InputDecoration(
-                hintText: 'Search crops...',
+                hintText: LanguageService.t('search_crops'),
                 hintStyle: TextStyle(
                   color: Colors.white.withOpacity(0.4),
-                  fontSize: 15,
+                  fontSize: 14,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   color: Colors.white.withOpacity(0.6),
-                  size: 20,
+                  size: 18,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                  horizontal: 12,
+                  vertical: 8,
                 ),
                 filled: false,
                 isDense: true,
@@ -444,7 +444,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Crops list
           Expanded(
@@ -469,10 +469,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 : GridView.builder(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.9,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
                         ),
                     itemCount: _filteredCrops.length,
                     itemBuilder: (context, index) {
@@ -498,41 +498,44 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                width: 40,
-                                height: 40,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: crop.categoryColor.withOpacity(0.1),
+                                  color: crop.categoryColor.withOpacity(0.08),
                                 ),
                                 child: crop.hasIcon
-                                    ? ClipOval(
-                                        child: Image.network(
-                                          crop.iconUrl!,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                return Icon(
-                                                  Icons.grass,
-                                                  color: crop.categoryColor,
-                                                  size: 20,
-                                                );
-                                              },
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(4),
+                                        child: ClipOval(
+                                          child: Image.network(
+                                            crop.iconUrl!,
+                                            width: 24,
+                                            height: 24,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  return Icon(
+                                                    Icons.grass,
+                                                    color: crop.categoryColor,
+                                                    size: 12,
+                                                  );
+                                                },
+                                          ),
                                         ),
                                       )
                                     : Icon(
                                         Icons.grass,
                                         color: crop.categoryColor,
-                                        size: 20,
+                                        size: 12,
                                       ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
+                              const SizedBox(height: 4),
+                              TranslatedCropName(
                                 crop.name,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                 ),
                                 textAlign: TextAlign.center,
@@ -541,8 +544,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               ),
                               if (isSelected)
                                 Container(
-                                  margin: const EdgeInsets.only(top: 4),
-                                  padding: const EdgeInsets.all(2),
+                                  margin: const EdgeInsets.only(top: 2),
+                                  padding: const EdgeInsets.all(1),
                                   decoration: const BoxDecoration(
                                     color: Color(0xFF1FBA55),
                                     shape: BoxShape.circle,
@@ -550,7 +553,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                   child: const Icon(
                                     Icons.check,
                                     color: Colors.white,
-                                    size: 12,
+                                    size: 8,
                                   ),
                                 ),
                             ],
@@ -560,19 +563,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     },
                   ),
           ),
-
-          const SizedBox(height: 16),
-
-          // Selected count
-          if (_selectedCropIds.isNotEmpty)
-            Text(
-              '${_selectedCropIds.length} crop${_selectedCropIds.length == 1 ? '' : 's'} selected',
-              style: TextStyle(
-                color: const Color(0xFF1FBA55),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
         ],
       ),
     );

@@ -173,6 +173,33 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // Check if user has completed onboarding
+  Future<bool> hasCompletedOnboarding() async {
+    try {
+      final profile = await getUserProfile();
+      return profile?['onboarding_completed'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Mark onboarding as completed
+  Future<void> markOnboardingCompleted() async {
+    try {
+      if (currentUser == null) return;
+
+      await Supabase.instance.client.from('user_profiles').upsert({
+        'id': currentUser!.id,
+        'onboarding_completed': true,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception(
+        'Failed to mark onboarding as completed: ${e.toString()}',
+      );
+    }
+  }
+
   String _normalizePhone(String input) {
     final trimmed = input.trim();
     if (trimmed.startsWith('+')) return trimmed;
@@ -484,11 +511,13 @@ class AuthService extends ChangeNotifier {
   }) async {
     try {
       final updateData = <String, dynamic>{};
-      if (plantingDate != null)
+      if (plantingDate != null) {
         updateData['planting_date'] = plantingDate.toIso8601String();
-      if (expectedHarvestDate != null)
+      }
+      if (expectedHarvestDate != null) {
         updateData['expected_harvest_date'] = expectedHarvestDate
             .toIso8601String();
+      }
       if (areaPlanted != null) updateData['area_planted'] = areaPlanted;
       if (status != null) updateData['status'] = status;
       if (notes != null) updateData['notes'] = notes;

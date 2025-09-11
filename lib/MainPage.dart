@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:farmlytics/services/language_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -15,7 +16,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
+
     // Set status bar for dark theme
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -32,13 +33,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
+    );
 
     _fadeController.forward();
   }
@@ -81,39 +78,42 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   expandedHeight: 120,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'farmlytics',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w300,
-                                          fontFamily: 'FunnelDisplay',
-                                          color: Colors.white,
-                                          letterSpacing: -0.5,
-                                        ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'farmlytics',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w300,
+                                        fontFamily: 'FunnelDisplay',
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
                                       ),
-                                      Text(
-                                        'AI-Powered Farming Assistant',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white.withOpacity(0.6),
-                                          fontWeight: FontWeight.w400,
-                                          letterSpacing: 0.5,
-                                        ),
+                                    ),
+                                    Text(
+                                      'AI-Powered Farming Assistant',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.6),
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: 0.5,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
+                              ),
                               Container(
                                 width: 40,
                                 height: 40,
@@ -138,7 +138,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-                
+
                 // Main Content
                 SliverPadding(
                   padding: const EdgeInsets.all(24),
@@ -160,10 +160,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  '👋',
-                                  style: TextStyle(fontSize: 24),
-                                ),
+                                Text('👋', style: TextStyle(fontSize: 24)),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Welcome Back',
@@ -188,9 +185,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Quick Actions Grid
                       Text(
                         'Quick Actions',
@@ -201,9 +198,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           fontFamily: 'FunnelDisplay',
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -238,9 +235,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Recent Activity
                       Text(
                         'Recent Activity',
@@ -251,9 +248,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           fontFamily: 'FunnelDisplay',
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -292,7 +289,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 100), // Bottom padding
                     ]),
                   ),
@@ -315,10 +312,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 0.5,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
       ),
       child: Material(
         color: Colors.transparent,
@@ -339,11 +333,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     color: color,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                  child: Icon(icon, color: Colors.white, size: 22),
                 ),
                 const Spacer(),
                 Text(

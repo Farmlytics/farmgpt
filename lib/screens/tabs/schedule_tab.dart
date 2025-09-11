@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:farmlytics/services/language_service.dart';
 
 class ScheduleTab extends StatefulWidget {
   const ScheduleTab({super.key});
@@ -16,31 +17,31 @@ class _ScheduleTabState extends State<ScheduleTab>
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  final List<ScheduleItem> _scheduleItems = [
+  List<ScheduleItem> get _scheduleItems => [
     ScheduleItem(
-      title: 'Water Tomato Plants',
-      description: 'Check soil moisture and water if needed',
+      title: LanguageService.t('water_tomato_plants'),
+      description: LanguageService.t('check_soil_moisture'),
       time: DateTime.now().add(const Duration(hours: 2)),
       category: ScheduleCategory.watering,
       isCompleted: false,
     ),
     ScheduleItem(
-      title: 'Apply Fertilizer',
-      description: 'Apply nitrogen-rich fertilizer to corn field',
+      title: LanguageService.t('apply_fertilizer'),
+      description: LanguageService.t('apply_nitrogen_fertilizer'),
       time: DateTime.now().add(const Duration(days: 1)),
       category: ScheduleCategory.fertilizing,
       isCompleted: false,
     ),
     ScheduleItem(
-      title: 'Pest Inspection',
-      description: 'Check for aphids and other pests',
+      title: LanguageService.t('pest_inspection'),
+      description: LanguageService.t('check_for_aphids'),
       time: DateTime.now().add(const Duration(days: 2)),
       category: ScheduleCategory.inspection,
       isCompleted: false,
     ),
     ScheduleItem(
-      title: 'Harvest Lettuce',
-      description: 'Harvest mature lettuce heads',
+      title: LanguageService.t('harvest_lettuce'),
+      description: LanguageService.t('harvest_mature_lettuce'),
       time: DateTime.now().add(const Duration(days: 3)),
       category: ScheduleCategory.harvesting,
       isCompleted: false,
@@ -73,7 +74,7 @@ class _ScheduleTabState extends State<ScheduleTab>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'schedule',
+                              LanguageService.t('schedule'),
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600,
@@ -83,7 +84,7 @@ class _ScheduleTabState extends State<ScheduleTab>
                               ),
                             ),
                             Text(
-                              'plan your farming activities',
+                              LanguageService.t('plan_farming_activities'),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
@@ -136,27 +137,27 @@ class _ScheduleTabState extends State<ScheduleTab>
                   children: [
                     Expanded(
                       child: _buildStatCard(
-                        title: 'Today',
+                        title: LanguageService.t('today'),
                         value: '2',
-                        subtitle: 'Tasks',
+                        subtitle: LanguageService.t('tasks'),
                         color: const Color(0xFFFF9800),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildStatCard(
-                        title: 'This Week',
+                        title: LanguageService.t('this_week'),
                         value: '8',
-                        subtitle: 'Tasks',
+                        subtitle: LanguageService.t('tasks'),
                         color: const Color(0xFF1FBA55),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildStatCard(
-                        title: 'Completed',
+                        title: LanguageService.t('completed'),
                         value: '15',
-                        subtitle: 'This month',
+                        subtitle: LanguageService.t('this_month'),
                         color: const Color(0xFF2196F3),
                       ),
                     ),
@@ -178,7 +179,7 @@ class _ScheduleTabState extends State<ScheduleTab>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Upcoming Tasks',
+                  LanguageService.t('upcoming_tasks'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -361,17 +362,17 @@ class _ScheduleTabState extends State<ScheduleTab>
     final now = DateTime.now();
     final difference = time.difference(now).inDays;
 
-    if (difference == 0) return 'Today';
-    if (difference == 1) return 'Tomorrow';
+    if (difference == 0) return LanguageService.t('today');
+    if (difference == 1) return LanguageService.t('tomorrow');
     if (difference < 7) {
-      const days = [
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-        'Sunday',
+      final days = [
+        LanguageService.t('monday'),
+        LanguageService.t('tuesday'),
+        LanguageService.t('wednesday'),
+        LanguageService.t('thursday'),
+        LanguageService.t('friday'),
+        LanguageService.t('saturday'),
+        LanguageService.t('sunday'),
       ];
       return days[time.weekday - 1];
     }

@@ -4,6 +4,7 @@ import 'package:farmlytics/screens/tabs/home_tab.dart';
 import 'package:farmlytics/screens/tabs/schedule_tab.dart';
 import 'package:farmlytics/screens/tabs/ai_chat_tab.dart';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,17 +19,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  final List<TabItem> _tabs = [
-    TabItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+  List<TabItem> get _tabs => [
+    TabItem(
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home,
+      label: LanguageService.t('home'),
+    ),
     TabItem(
       icon: Icons.schedule_outlined,
       activeIcon: Icons.schedule,
-      label: 'Schedule',
+      label: LanguageService.t('calendar'),
     ),
     TabItem(
       icon: Icons.chat_outlined,
       activeIcon: Icons.chat,
-      label: 'AI Chat',
+      label: LanguageService.t('chat'),
     ),
   ];
 

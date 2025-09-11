@@ -1,5 +1,9 @@
 import 'package:farmlytics/auth_wrapper.dart';
+import 'package:farmlytics/screens/language_selection_screen.dart';
+import 'package:farmlytics/screens/onboarding_screen.dart';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
+import 'package:farmlytics/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -11,6 +15,9 @@ void main() async {
 
   // Initialize Supabase
   await AuthService.initialize();
+
+  // Initialize Language Service
+  await LanguageService.initialize();
 
   runApp(const MyApp());
 }
@@ -62,6 +69,11 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const AuthWrapper(),
+      routes: {
+        '/language-selection': (context) => const LanguageSelectionScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/home': (context) => const HomeScreen(),
+      },
     );
   }
 }

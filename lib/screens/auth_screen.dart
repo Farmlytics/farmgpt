@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:farmlytics/services/auth_service.dart';
+import 'package:farmlytics/services/language_service.dart';
 import 'package:farmlytics/screens/onboarding_screen.dart';
 import 'package:farmlytics/screens/home_screen.dart';
 
@@ -251,8 +252,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           opacity: _fadeAnimation,
                           child: Text(
                             _isSignUp
-                                ? 'Create your account'
-                                : 'Sign in with phone',
+                                ? LanguageService.t('sign_up')
+                                : LanguageService.t('sign_in'),
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w500,
@@ -276,13 +277,15 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                 if (_isSignUp) ...[
                                   _buildTextField(
                                     controller: _nameController,
-                                    label: 'Full name',
+                                    label: LanguageService.t('name'),
                                     icon: Icons.person_outlined,
                                     keyboardType: TextInputType.name,
                                     validator: (value) {
                                       if (_isSignUp &&
                                           (value == null || value.isEmpty)) {
-                                        return 'Please enter your full name';
+                                        return LanguageService.t(
+                                          'invalid_name',
+                                        );
                                       }
                                       if (_isSignUp && value!.length < 2) {
                                         return 'Name must be at least 2 characters';
@@ -296,12 +299,14 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                 // Phone field
                                 _buildTextField(
                                   controller: _phoneController,
-                                  label: 'Phone number',
+                                  label: LanguageService.t('phone_number'),
                                   icon: Icons.phone_outlined,
                                   keyboardType: TextInputType.phone,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter your phone number';
+                                      return LanguageService.t(
+                                        'invalid_phone_number',
+                                      );
                                     }
                                     // Normalize to +91 if user did not include country code
                                     final normalized = value.startsWith('+')
@@ -328,7 +333,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                           children: [
                                             _buildTextField(
                                               controller: _otpController,
-                                              label: 'OTP code',
+                                              label: LanguageService.t(
+                                                'verification_code',
+                                              ),
                                               icon: Icons.lock_clock_outlined,
                                               keyboardType:
                                                   TextInputType.number,
@@ -336,7 +343,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                                 if (!_codeSent) return null;
                                                 if (value == null ||
                                                     value.isEmpty) {
-                                                  return 'Enter the OTP code';
+                                                  return LanguageService.t(
+                                                    'invalid_verification_code',
+                                                  );
                                                 }
                                                 if (value.length < 4) {
                                                   return 'OTP seems too short';
@@ -398,10 +407,16 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                               )
                                             : Text(
                                                 _codeSent
-                                                    ? 'Verify OTP'
+                                                    ? LanguageService.t(
+                                                        'verify',
+                                                      )
                                                     : (_isSignUp
-                                                          ? 'Create Account'
-                                                          : 'Send OTP'),
+                                                          ? LanguageService.t(
+                                                              'sign_up',
+                                                            )
+                                                          : LanguageService.t(
+                                                              'send_code',
+                                                            )),
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,
@@ -455,8 +470,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                           },
                                     child: Text(
                                       _resendSeconds > 0
-                                          ? 'Resend in ${_resendSeconds}s'
-                                          : 'Resend OTP',
+                                          ? '${LanguageService.t('resend_code_in')} ${_resendSeconds}${LanguageService.t('seconds')}'
+                                          : LanguageService.t('resend_code'),
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.8),
                                         fontSize: 14,
@@ -505,7 +520,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             });
                           },
                           child: Text(
-                            _isSignUp ? 'Sign In' : 'Sign Up',
+                            _isSignUp
+                                ? LanguageService.t('sign_in')
+                                : LanguageService.t('sign_up'),
                             style: const TextStyle(
                               color: Color(0xFF1FBA55),
                               fontSize: 14,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmlytics/services/language_service.dart';
 
 class AiChatTab extends StatefulWidget {
   const AiChatTab({super.key});
@@ -13,22 +14,21 @@ class _AiChatTabState extends State<AiChatTab>
   bool get wantKeepAlive => true;
 
   final TextEditingController _messageController = TextEditingController();
-  final List<ChatMessage> _messages = [
+  List<ChatMessage> get _messages => [
     ChatMessage(
-      text:
-          "Hello! I'm your AI farming assistant. How can I help you today? You can ask me about crop management, pest control, weather advice, or any other farming questions.",
+      text: LanguageService.t('hello_ai_assistant'),
       isUser: false,
       time: DateTime.now().subtract(const Duration(minutes: 5)),
     ),
   ];
 
-  final List<String> _quickQuestions = [
-    "When should I water my tomatoes?",
-    "How to deal with aphids?",
-    "Best fertilizer for corn?",
-    "Weather forecast impact",
-    "Crop rotation advice",
-    "Soil pH management",
+  List<String> get _quickQuestions => [
+    LanguageService.t('when_water_tomatoes'),
+    LanguageService.t('how_deal_aphids'),
+    LanguageService.t('best_fertilizer_corn'),
+    LanguageService.t('weather_forecast_impact'),
+    LanguageService.t('crop_rotation_advice'),
+    LanguageService.t('soil_ph_management'),
   ];
 
   @override
@@ -66,16 +66,11 @@ class _AiChatTabState extends State<AiChatTab>
   String _generateAIResponse(String question) {
     // Simple response generator - in real app, this would connect to an AI service
     final responses = {
-      'water':
-          "For optimal watering, check soil moisture 2-3 inches deep. Water early morning or late evening to reduce evaporation. Most crops need 1-2 inches per week.",
-      'tomato':
-          "Tomatoes need consistent watering - avoid both drought stress and overwatering. Water at the base to prevent leaf diseases. Mulching helps retain moisture.",
-      'fertilizer':
-          "Use balanced fertilizers during vegetative growth (N-P-K 10-10-10), then switch to lower nitrogen for flowering/fruiting stages. Always test soil first.",
-      'pest':
-          "Integrated Pest Management (IPM) is best: use beneficial insects, crop rotation, and targeted treatments only when necessary. Regular monitoring is key.",
-      'weather':
-          "Check local weather forecasts and adjust activities accordingly. Avoid fertilizing before heavy rains, and protect sensitive plants from extreme weather.",
+      'water': LanguageService.t('optimal_watering_advice'),
+      'tomato': LanguageService.t('tomato_watering_advice'),
+      'fertilizer': LanguageService.t('fertilizer_advice'),
+      'pest': LanguageService.t('pest_management_advice'),
+      'weather': LanguageService.t('weather_advice'),
     };
 
     final lowerQuestion = question.toLowerCase();
@@ -85,7 +80,7 @@ class _AiChatTabState extends State<AiChatTab>
       }
     }
 
-    return "That's a great question! For the most accurate advice, I'd recommend consulting with local agricultural extension services or soil testing labs. Is there a specific aspect of farming you'd like to explore further?";
+    return LanguageService.t('general_ai_response');
   }
 
   @override
@@ -107,7 +102,7 @@ class _AiChatTabState extends State<AiChatTab>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ai assistant',
+                          LanguageService.t('ai_assistant'),
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w600,
@@ -117,7 +112,7 @@ class _AiChatTabState extends State<AiChatTab>
                           ),
                         ),
                         Text(
-                          'get farming insights and advice',
+                          LanguageService.t('get_farming_insights'),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.6),
@@ -170,7 +165,7 @@ class _AiChatTabState extends State<AiChatTab>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Quick Questions',
+                        LanguageService.t('quick_questions'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -255,7 +250,7 @@ class _AiChatTabState extends State<AiChatTab>
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Ask me anything about farming...',
+                        hintText: LanguageService.t('ask_anything'),
                         hintStyle: TextStyle(
                           color: Colors.white.withOpacity(0.5),
                           fontSize: 14,
